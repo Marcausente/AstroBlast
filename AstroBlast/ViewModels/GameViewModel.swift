@@ -17,6 +17,10 @@ class GameViewModel: ObservableObject {
     private var screenWidth: CGFloat = UIScreen.main.bounds.width
     private var screenHeight: CGFloat = UIScreen.main.bounds.height
     
+    // Constantes para la posición y tamaño de la nave
+    private let shipYPosition: CGFloat = 120 // Distancia desde abajo
+    private let shipHeight: CGFloat = 80 // Altura de la nave
+    
     init() {
         startGameLoop()
     }
@@ -40,7 +44,7 @@ class GameViewModel: ObservableObject {
         for i in 0..<gameModel.projectiles.count {
             if i < gameModel.projectiles.count {
                 var projectile = gameModel.projectiles[i]
-                projectile.position.y -= 10 // Velocidad del proyectil
+                projectile.position.y -= 15 // Velocidad del proyectil aumentada
                 
                 // Si el proyectil sale de la pantalla, lo eliminamos
                 if projectile.position.y < 0 {
@@ -67,8 +71,16 @@ class GameViewModel: ObservableObject {
     
     // Método para disparar
     func shoot() {
+        // La posición de la nave es (playerPosition, screenHeight - shipYPosition)
+        // Queremos que el proyectil salga desde la parte superior de la nave
+        
+        // Calculamos la posición Y del proyectil
+        // La nave está a 120 píxeles desde abajo, y tiene 80 píxeles de alto
+        // Por lo tanto, la parte superior de la nave está a 120 + 40 = 160 píxeles desde abajo
+        let projectileY = screenHeight - shipYPosition - shipHeight
+        
         let projectile = GameModel.Projectile(
-            position: CGPoint(x: gameModel.playerPosition, y: screenHeight - 120)
+            position: CGPoint(x: gameModel.playerPosition, y: projectileY)
         )
         gameModel.projectiles.append(projectile)
     }

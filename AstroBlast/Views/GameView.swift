@@ -88,8 +88,9 @@ struct GameView: View {
                 ForEach(viewModel.gameModel.projectiles) { projectile in
                     Circle()
                         .fill(Color.yellow)
-                        .frame(width: 10, height: 10)
+                        .frame(width: 6, height: 6)
                         .position(projectile.position)
+                        .shadow(color: .yellow, radius: 4, x: 0, y: 0)
                 }
                 
                 // Nave del jugador
