@@ -68,7 +68,7 @@ class GameViewModel: ObservableObject {
     // Método para disparar
     func shoot() {
         let projectile = GameModel.Projectile(
-            position: CGPoint(x: gameModel.playerPosition, y: screenHeight - 100)
+            position: CGPoint(x: gameModel.playerPosition, y: screenHeight - 120)
         )
         gameModel.projectiles.append(projectile)
     }

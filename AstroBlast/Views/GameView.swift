@@ -97,7 +97,7 @@ struct GameView: View {
                     .resizable()
                     .scaledToFit()
                     .frame(width: 80, height: 80)
-                    .position(x: viewModel.gameModel.playerPosition, y: geometry.size.height - 50)
+                    .position(x: viewModel.gameModel.playerPosition, y: geometry.size.height - 120)
                     .gesture(
                         DragGesture()
                             .onChanged { value in
