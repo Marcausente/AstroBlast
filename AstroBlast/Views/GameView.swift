@@ -7,6 +7,47 @@
 
 import SwiftUI
 
+struct StarField: View {
+    let starsCount: Int
+    @State private var stars: [Star] = []
+    
+    struct Star: Identifiable {
+        let id = UUID()
+        let x: CGFloat
+        let y: CGFloat
+        let size: CGFloat
+        let opacity: Double
+    }
+    
+    init(starsCount: Int = 100) {
+        self.starsCount = starsCount
+    }
+    
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack {
+                ForEach(stars) { star in
+                    Circle()
+                        .fill(Color.white)
+                        .frame(width: star.size, height: star.size)
+                        .position(x: star.x, y: star.y)
+                        .opacity(star.opacity)
+                }
+            }
+            .onAppear {
+                stars = (0..<starsCount).map { _ in
+                    Star(
+                        x: CGFloat.random(in: 0...geometry.size.width),
+                        y: CGFloat.random(in: 0...geometry.size.height),
+                        size: CGFloat.random(in: 1...3),
+                        opacity: Double.random(in: 0.3...1.0)
+                    )
+                }
+            }
+        }
+    }
+}
+
 struct GameView: View {
     @StateObject private var viewModel = GameViewModel()
     @State private var dragOffset: CGFloat = 0
@@ -16,6 +57,9 @@ struct GameView: View {
             ZStack {
                 // Fondo negro para el espacio
                 Color.black.edgesIgnoringSafeArea(.all)
+                
+                // Campo de estrellas
+                StarField(starsCount: 150)
                 
                 // Puntuación y nivel
                 VStack {
@@ -77,6 +121,7 @@ struct GameView: View {
                                         .foregroundColor(.white)
                                         .font(.system(size: 30))
                                 )
+                                .shadow(color: .red.opacity(0.7), radius: 5, x: 0, y: 0)
                         }
                         .padding(.trailing, 30)
                         .padding(.bottom, 30)
@@ -88,5 +133,6 @@ struct GameView: View {
                 viewModel.movePlayer(to: geometry.size.width / 2)
             }
         }
+        .statusBar(hidden: true)
     }
-} 
+}
