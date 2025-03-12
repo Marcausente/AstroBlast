@@ -60,73 +60,137 @@ struct GameView: View {
                 // Campo de estrellas
                 StarField(starsCount: 150)
                 
-                // Puntuación y nivel
-                VStack {
-                    HStack {
-                        Spacer()
-                        Text("Nivel: \(viewModel.gameModel.level)")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .padding(.top, 20)
-                            .padding(.trailing, 20)
-                    }
-                    
-                    HStack {
-                        Spacer()
-                        Text("Puntos: \(viewModel.gameModel.score)")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .padding(.top, 10)
-                            .padding(.trailing, 20)
-                    }
-                    
-                    Spacer()
-                }
-                
-                // Proyectiles
-                ForEach(viewModel.gameModel.projectiles) { projectile in
-                    Circle()
-                        .fill(Color.yellow)
-                        .frame(width: 6, height: 6)
-                        .position(projectile.position)
-                        .shadow(color: .yellow, radius: 4, x: 0, y: 0)
-                }
-                
-                // Nave del jugador
-                Image("Nave")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 80, height: 80)
-                    .position(x: viewModel.gameModel.playerPosition, y: viewModel.getShipYPosition())
-                
-                // Controles
-                VStack {
-                    Spacer()
-                    HStack {
-                        // Joystick (izquierda)
-                        JoystickView(direction: $viewModel.joystickDirection)
-                            .frame(width: 100, height: 100)
+                // Interfaz de juego
+                if !viewModel.gameModel.isGameOver {
+                    // Puntuación y nivel
+                    VStack {
+                        HStack {
+                            // Vidas
+                            HStack(spacing: 5) {
+                                ForEach(0..<viewModel.gameModel.lives, id: \.self) { _ in
+                                    Image(systemName: "heart.fill")
+                                        .foregroundColor(.red)
+                                        .font(.system(size: 20))
+                                }
+                            }
                             .padding(.leading, 20)
-                            .padding(.bottom, 50)
+                            .padding(.top, 20)
+                            
+                            Spacer()
+                            
+                            Text("Nivel: \(viewModel.gameModel.level)")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                                .padding(.top, 20)
+                                .padding(.trailing, 20)
+                        }
+                        
+                        HStack {
+                            Spacer()
+                            Text("Puntos: \(viewModel.gameModel.score)")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                                .padding(.top, 10)
+                                .padding(.trailing, 20)
+                        }
                         
                         Spacer()
-                        
-                        // Botón de disparo (derecha)
-                        Button(action: {
-                            viewModel.shoot()
-                        }) {
-                            Circle()
-                                .fill(Color.red)
-                                .frame(width: 60, height: 60)
-                                .overlay(
-                                    Image(systemName: "bolt.fill")
-                                        .foregroundColor(.white)
-                                        .font(.system(size: 30))
-                                )
-                                .shadow(color: .red.opacity(0.7), radius: 5, x: 0, y: 0)
+                    }
+                    
+                    // Enemigos
+                    ForEach(viewModel.gameModel.enemies) { enemy in
+                        Image("Enemigo")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: enemy.size.width, height: enemy.size.height)
+                            .position(enemy.position)
+                    }
+                    
+                    // Proyectiles del jugador
+                    ForEach(viewModel.gameModel.projectiles) { projectile in
+                        Circle()
+                            .fill(Color.yellow)
+                            .frame(width: 6, height: 6)
+                            .position(projectile.position)
+                            .shadow(color: .yellow, radius: 4, x: 0, y: 0)
+                    }
+                    
+                    // Proyectiles enemigos
+                    ForEach(viewModel.gameModel.enemyProjectiles) { projectile in
+                        Circle()
+                            .fill(Color.red)
+                            .frame(width: 6, height: 6)
+                            .position(projectile.position)
+                            .shadow(color: .red, radius: 4, x: 0, y: 0)
+                    }
+                    
+                    // Nave del jugador
+                    Image("Nave")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 80, height: 80)
+                        .position(x: viewModel.gameModel.playerPosition, y: viewModel.getShipYPosition())
+                    
+                    // Controles
+                    VStack {
+                        Spacer()
+                        HStack {
+                            // Joystick (izquierda)
+                            JoystickView(direction: $viewModel.joystickDirection)
+                                .frame(width: 100, height: 100)
+                                .padding(.leading, 20)
+                                .padding(.bottom, 50)
+                            
+                            Spacer()
+                            
+                            // Botón de disparo (derecha)
+                            Button(action: {
+                                viewModel.shoot()
+                            }) {
+                                Circle()
+                                    .fill(Color.red)
+                                    .frame(width: 60, height: 60)
+                                    .overlay(
+                                        Image(systemName: "bolt.fill")
+                                            .foregroundColor(.white)
+                                            .font(.system(size: 30))
+                                    )
+                                    .shadow(color: .red.opacity(0.7), radius: 5, x: 0, y: 0)
+                            }
+                            .padding(.trailing, 30)
+                            .padding(.bottom, 50)
                         }
-                        .padding(.trailing, 30)
-                        .padding(.bottom, 50)
+                    }
+                } else {
+                    // Pantalla de Game Over
+                    VStack {
+                        Text("GAME OVER")
+                            .font(.largeTitle)
+                            .fontWeight(.bold)
+                            .foregroundColor(.red)
+                            .padding()
+                        
+                        Text("Puntuación: \(viewModel.gameModel.score)")
+                            .font(.title)
+                            .foregroundColor(.white)
+                            .padding()
+                        
+                        Text("Nivel alcanzado: \(viewModel.gameModel.level)")
+                            .font(.title2)
+                            .foregroundColor(.white)
+                            .padding()
+                        
+                        Button(action: {
+                            viewModel.restartGame()
+                        }) {
+                            Text("Reiniciar Juego")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                                .padding()
+                                .background(Color.blue)
+                                .cornerRadius(10)
+                        }
+                        .padding(.top, 30)
                     }
                 }
             }
