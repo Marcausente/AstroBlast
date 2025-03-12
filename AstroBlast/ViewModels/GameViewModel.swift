@@ -18,12 +18,12 @@ class GameViewModel: ObservableObject {
     private var screenHeight: CGFloat = UIScreen.main.bounds.height
     
     // Constantes para la posición y tamaño de la nave
-    private let shipYPosition: CGFloat = 120 // Distancia desde abajo
     private let shipHeight: CGFloat = 80 // Altura de la nave
     private let shipWidth: CGFloat = 80 // Ancho de la nave
     
     // Posición relativa de la nave (porcentaje de la pantalla)
-    private let shipYPositionRatio: CGFloat = 0.15 // 15% desde abajo
+    // Ahora la nave estará a un 85% desde la parte superior (15% desde abajo)
+    private let shipYPositionRatio: CGFloat = 0.85
     
     // Dirección del joystick (-1 a 1)
     @Published var joystickDirection: CGFloat = 0
@@ -106,13 +106,12 @@ class GameViewModel: ObservableObject {
     // Método para disparar
     func shoot() {
         // Calculamos la posición Y del proyectil justo encima de la nave
-        // La nave está posicionada en (playerPosition, screenHeight - shipYPosition)
         
         // Calculamos la posición Y de la nave basada en el tamaño de la pantalla
-        let shipY = screenHeight * (1 - shipYPositionRatio)
+        let shipY = screenHeight * shipYPositionRatio
         
         // El proyectil debe aparecer justo encima de la nave
-        let projectileY = shipY - shipHeight / 2
+        let projectileY = shipY - shipHeight / 2 - 5 // 5 píxeles por encima de la nave
         
         let projectile = GameModel.Projectile(
             position: CGPoint(x: gameModel.playerPosition, y: projectileY)
@@ -122,7 +121,7 @@ class GameViewModel: ObservableObject {
     
     // Método para obtener la posición Y de la nave
     func getShipYPosition() -> CGFloat {
-        return screenHeight * (1 - shipYPositionRatio)
+        return screenHeight * shipYPositionRatio
     }
     
     // Método para incrementar la puntuación
