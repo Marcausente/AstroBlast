@@ -39,6 +39,14 @@ class GameViewModel: ObservableObject {
     private let enemyProjectileSpeed: CGFloat = 5.0 // Velocidad de los proyectiles enemigos
     private let playerProjectileSpeed: CGFloat = 15.0 // Velocidad de los proyectiles del jugador
     
+    // Posición Y objetivo para los enemigos (mitad de la pantalla)
+    private var enemyTargetY: CGFloat {
+        return screenHeight * 0.5
+    }
+    
+    // Distancia mínima entre enemigos
+    private let minEnemyDistance: CGFloat = 70
+    
     init() {
         // Actualizar las dimensiones de la pantalla
         updateScreenDimensions()
@@ -134,13 +142,81 @@ class GameViewModel: ObservableObject {
     }
     
     private func updateEnemies(deltaTime: TimeInterval) {
-        // Mover los enemigos hacia abajo
+        // Primero, establecer el objetivo Y para cada enemigo si no lo tiene
+        for i in 0..<gameModel.enemies.count {
+            if i < gameModel.enemies.count && gameModel.enemies[i].targetY == nil {
+                var enemy = gameModel.enemies[i]
+                enemy.targetY = enemyTargetY
+                gameModel.enemies[i] = enemy
+            }
+        }
+        
+        // Mover los enemigos hacia abajo hasta la mitad de la pantalla
         for i in 0..<gameModel.enemies.count {
             if i < gameModel.enemies.count {
                 var enemy = gameModel.enemies[i]
                 
-                // Mover el enemigo hacia abajo
-                enemy.position.y += enemySpeed
+                // Solo mover el enemigo si está en movimiento
+                if enemy.isMoving {
+                    // Verificar si hay algún enemigo debajo que impida el movimiento
+                    var shouldStop = false
+                    
+                    for otherEnemy in gameModel.enemies {
+                        // No comparar con sí mismo
+                        if otherEnemy.id != enemy.id {
+                            // Si el otro enemigo está debajo y en la misma columna aproximadamente
+                            if otherEnemy.position.y > enemy.position.y && 
+                               abs(otherEnemy.position.x - enemy.position.x) < enemy.size.width * 0.8 {
+                                // Calcular la distancia vertical
+                                let verticalDistance = otherEnemy.position.y - enemy.position.y
+                                
+                                // Si está demasiado cerca, detener el movimiento
+                                if verticalDistance < minEnemyDistance {
+                                    shouldStop = true
+                                    break
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Si no hay obstáculos, mover hacia abajo hasta la posición objetivo
+                    if !shouldStop {
+                        // Mover el enemigo hacia abajo
+                        enemy.position.y += enemySpeed
+                        
+                        // Verificar si ha llegado a la posición objetivo
+                        if let targetY = enemy.targetY, enemy.position.y >= targetY {
+                            enemy.position.y = targetY // Ajustar a la posición exacta
+                            enemy.isMoving = false // Detener el movimiento
+                        }
+                    } else {
+                        // Si hay un obstáculo, detener temporalmente
+                        enemy.isMoving = false
+                    }
+                } else {
+                    // Si el enemigo está detenido, verificar si puede moverse de nuevo
+                    var canMove = true
+                    
+                    for otherEnemy in gameModel.enemies {
+                        if otherEnemy.id != enemy.id {
+                            // Si hay un enemigo debajo y está demasiado cerca
+                            if otherEnemy.position.y > enemy.position.y && 
+                               abs(otherEnemy.position.x - enemy.position.x) < enemy.size.width * 0.8 {
+                                let verticalDistance = otherEnemy.position.y - enemy.position.y
+                                
+                                if verticalDistance < minEnemyDistance {
+                                    canMove = false
+                                    break
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Si puede moverse y no ha llegado a su objetivo, reanudar movimiento
+                    if canMove && enemy.position.y < enemy.targetY! {
+                        enemy.isMoving = true
+                    }
+                }
                 
                 // Si el enemigo sale de la pantalla, lo eliminamos
                 if enemy.position.y > screenHeight + 50 {
@@ -185,12 +261,28 @@ class GameViewModel: ObservableObject {
             // Posición aleatoria en X
             let randomX = CGFloat.random(in: 50...(screenWidth - 50))
             
-            // Crear un nuevo enemigo en la parte superior de la pantalla
-            let enemy = GameModel.Enemy(
-                position: CGPoint(x: randomX, y: 50)
-            )
+            // Verificar si hay espacio para un nuevo enemigo
+            var canSpawn = true
             
-            gameModel.enemies.append(enemy)
+            for enemy in gameModel.enemies {
+                // Si hay un enemigo cerca de la posición de generación
+                if abs(enemy.position.x - randomX) < 60 && enemy.position.y < 100 {
+                    canSpawn = false
+                    break
+                }
+            }
+            
+            // Solo generar si hay espacio
+            if canSpawn {
+                // Crear un nuevo enemigo en la parte superior de la pantalla
+                let enemy = GameModel.Enemy(
+                    position: CGPoint(x: randomX, y: 50),
+                    isMoving: true,
+                    targetY: enemyTargetY
+                )
+                
+                gameModel.enemies.append(enemy)
+            }
         }
     }
     

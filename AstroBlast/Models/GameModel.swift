@@ -67,6 +67,8 @@ struct GameModel {
         var health: Int = 1
         var size: CGSize = CGSize(width: 60, height: 60)
         var lastShootTime: TimeInterval = 0
+        var isMoving: Bool = true // Indica si el enemigo está en movimiento
+        var targetY: CGFloat? = nil // Posición Y objetivo (mitad de la pantalla)
         
         // Método para verificar colisión con un proyectil
         func isHit(by projectile: Projectile) -> Bool {
@@ -78,6 +80,25 @@ struct GameModel {
             )
             
             return enemyRect.contains(projectile.position)
+        }
+        
+        // Método para verificar colisión con otro enemigo
+        func isColliding(with otherEnemy: Enemy) -> Bool {
+            // Calcular la distancia entre los centros de los enemigos
+            let dx = position.x - otherEnemy.position.x
+            let dy = position.y - otherEnemy.position.y
+            let distance = sqrt(dx * dx + dy * dy)
+            
+            // Calcular la suma de los radios (considerando que son círculos)
+            let minDistance = (size.width + otherEnemy.size.width) / 2
+            
+            // Hay colisión si la distancia es menor que la suma de los radios
+            return distance < minDistance
+        }
+        
+        // Método para verificar si el enemigo está por encima de otro
+        func isAbove(_ otherEnemy: Enemy) -> Bool {
+            return position.y < otherEnemy.position.y && abs(position.x - otherEnemy.position.x) < size.width
         }
     }
     
