@@ -18,7 +18,7 @@ struct GameModel {
     
     // Tiempo de juego
     var elapsedTime: TimeInterval = 0
-    var levelDuration: TimeInterval = 180 // 3 minutos en segundos
+    var levelDuration: TimeInterval = 120 // 2 minutos en segundos
     
     // Posición del jugador
     var playerPosition: CGFloat = 0 // Posición X de la nave del jugador

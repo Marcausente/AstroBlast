@@ -51,6 +51,26 @@ struct StarField: View {
 struct GameView: View {
     @StateObject private var viewModel = GameViewModel()
     
+    // Determinar si estamos en un iPad
+    private var isIPad: Bool {
+        return UIDevice.current.userInterfaceIdiom == .pad
+    }
+    
+    // Tamaño del joystick basado en el dispositivo
+    private var joystickSize: CGFloat {
+        return isIPad ? 160 : 100
+    }
+    
+    // Tamaño del botón de disparo basado en el dispositivo
+    private var shootButtonSize: CGFloat {
+        return isIPad ? 90 : 60
+    }
+    
+    // Padding para los controles basado en el dispositivo
+    private var controlsPadding: CGFloat {
+        return isIPad ? 70 : 50
+    }
+    
     var body: some View {
         GeometryReader { geometry in
             ZStack {
@@ -70,7 +90,7 @@ struct GameView: View {
                                 ForEach(0..<viewModel.gameModel.lives, id: \.self) { _ in
                                     Image(systemName: "heart.fill")
                                         .foregroundColor(.red)
-                                        .font(.system(size: 20))
+                                        .font(.system(size: isIPad ? 30 : 20))
                                 }
                             }
                             .padding(.leading, 20)
@@ -158,7 +178,7 @@ struct GameView: View {
                     Image("Nave")
                         .resizable()
                         .scaledToFit()
-                        .frame(width: 80, height: 80)
+                        .frame(width: isIPad ? 100 : 80, height: isIPad ? 100 : 80)
                         .position(x: viewModel.gameModel.playerPosition, y: viewModel.getShipYPosition())
                     
                     // Controles
@@ -167,9 +187,9 @@ struct GameView: View {
                         HStack {
                             // Joystick (izquierda)
                             JoystickView(direction: $viewModel.joystickDirection)
-                                .frame(width: 100, height: 100)
+                                .frame(width: joystickSize, height: joystickSize)
                                 .padding(.leading, 20)
-                                .padding(.bottom, 50)
+                                .padding(.bottom, controlsPadding)
                             
                             Spacer()
                             
@@ -179,16 +199,16 @@ struct GameView: View {
                             }) {
                                 Circle()
                                     .fill(Color.red)
-                                    .frame(width: 60, height: 60)
+                                    .frame(width: shootButtonSize, height: shootButtonSize)
                                     .overlay(
                                         Image(systemName: "bolt.fill")
                                             .foregroundColor(.white)
-                                            .font(.system(size: 30))
+                                            .font(.system(size: isIPad ? 45 : 30))
                                     )
                                     .shadow(color: .red.opacity(0.7), radius: 5, x: 0, y: 0)
                             }
                             .padding(.trailing, 30)
-                            .padding(.bottom, 50)
+                            .padding(.bottom, controlsPadding)
                         }
                     }
                 } else if viewModel.gameModel.isLevelCompleted {
@@ -205,7 +225,7 @@ struct GameView: View {
                             .foregroundColor(.white)
                             .padding()
                         
-                        Text("¡Sobreviviste durante 3 minutos!")
+                        Text("¡Sobreviviste durante 2 minutos!")
                             .font(.title2)
                             .foregroundColor(.white)
                             .padding(.bottom, 10)
