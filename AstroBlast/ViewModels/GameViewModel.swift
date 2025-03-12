@@ -12,6 +12,7 @@ import Combine
 class GameViewModel: ObservableObject {
     @Published var gameModel = GameModel()
     private var timer: Timer?
+    private var lastUpdateTime: TimeInterval = 0
     
     // Dimensiones de la pantalla para cálculos
     private var screenWidth: CGFloat = UIScreen.main.bounds.width
@@ -30,6 +31,12 @@ class GameViewModel: ObservableObject {
     
     // Velocidad de movimiento de la nave
     private let shipSpeed: CGFloat = 10
+    
+    // Constantes para los enemigos
+    private let enemySpawnInterval: TimeInterval = 2.0 // Tiempo entre generación de enemigos
+    private let enemyShootInterval: TimeInterval = 1.5 // Tiempo entre disparos enemigos
+    private let enemySpeed: CGFloat = 2.0 // Velocidad de movimiento de los enemigos
+    private let enemyProjectileSpeed: CGFloat = 8.0 // Velocidad de los proyectiles enemigos
     
     init() {
         // Actualizar las dimensiones de la pantalla
@@ -53,14 +60,31 @@ class GameViewModel: ObservableObject {
     }
     
     private func startGameLoop() {
+        lastUpdateTime = Date().timeIntervalSince1970
+        
         timer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { [weak self] _ in
-            self?.updateGame()
+            guard let self = self else { return }
+            
+            let currentTime = Date().timeIntervalSince1970
+            let deltaTime = currentTime - self.lastUpdateTime
+            self.lastUpdateTime = currentTime
+            
+            self.updateGame(deltaTime: deltaTime)
         }
     }
     
-    private func updateGame() {
+    private func updateGame(deltaTime: TimeInterval) {
+        if gameModel.isGameOver {
+            return
+        }
+        
         updateProjectiles()
         updateShipPosition()
+        updateEnemies(deltaTime: deltaTime)
+        updateEnemyProjectiles()
+        checkCollisions()
+        spawnEnemies(deltaTime: deltaTime)
+        enemyShoot(deltaTime: deltaTime)
     }
     
     private func updateShipPosition() {
@@ -74,7 +98,7 @@ class GameViewModel: ObservableObject {
     }
     
     private func updateProjectiles() {
-        // Mover los proyectiles hacia arriba
+        // Mover los proyectiles del jugador hacia arriba
         for i in 0..<gameModel.projectiles.count {
             if i < gameModel.projectiles.count {
                 var projectile = gameModel.projectiles[i]
@@ -91,6 +115,170 @@ class GameViewModel: ObservableObject {
         
         // Forzar actualización de la UI
         objectWillChange.send()
+    }
+    
+    private func updateEnemies(deltaTime: TimeInterval) {
+        // Mover los enemigos hacia abajo
+        for i in 0..<gameModel.enemies.count {
+            if i < gameModel.enemies.count {
+                var enemy = gameModel.enemies[i]
+                
+                // Mover el enemigo hacia abajo
+                enemy.position.y += enemySpeed
+                
+                // Si el enemigo sale de la pantalla, lo eliminamos
+                if enemy.position.y > screenHeight + 50 {
+                    gameModel.enemies.remove(at: i)
+                } else {
+                    gameModel.enemies[i] = enemy
+                }
+            }
+        }
+    }
+    
+    private func updateEnemyProjectiles() {
+        // Mover los proyectiles enemigos hacia abajo
+        for i in 0..<gameModel.enemyProjectiles.count {
+            if i < gameModel.enemyProjectiles.count {
+                var projectile = gameModel.enemyProjectiles[i]
+                projectile.position.y += enemyProjectileSpeed
+                
+                // Si el proyectil sale de la pantalla, lo eliminamos
+                if projectile.position.y > screenHeight {
+                    gameModel.enemyProjectiles.remove(at: i)
+                } else {
+                    gameModel.enemyProjectiles[i] = projectile
+                }
+            }
+        }
+    }
+    
+    private func spawnEnemies(deltaTime: TimeInterval) {
+        gameModel.lastEnemySpawnTime += deltaTime
+        
+        // Generar un nuevo enemigo cada cierto tiempo
+        if gameModel.lastEnemySpawnTime >= enemySpawnInterval {
+            gameModel.lastEnemySpawnTime = 0
+            
+            // Posición aleatoria en X
+            let randomX = CGFloat.random(in: 50...(screenWidth - 50))
+            
+            // Crear un nuevo enemigo en la parte superior de la pantalla
+            let enemy = GameModel.Enemy(
+                position: CGPoint(x: randomX, y: 50)
+            )
+            
+            gameModel.enemies.append(enemy)
+        }
+    }
+    
+    private func enemyShoot(deltaTime: TimeInterval) {
+        gameModel.lastEnemyShootTime += deltaTime
+        
+        // Hacer que los enemigos disparen cada cierto tiempo
+        if gameModel.lastEnemyShootTime >= enemyShootInterval {
+            gameModel.lastEnemyShootTime = 0
+            
+            // Seleccionar un enemigo aleatorio para disparar
+            if !gameModel.enemies.isEmpty {
+                let randomIndex = Int.random(in: 0..<gameModel.enemies.count)
+                let enemy = gameModel.enemies[randomIndex]
+                
+                // Crear un proyectil enemigo
+                let projectile = GameModel.Projectile(
+                    position: CGPoint(x: enemy.position.x, y: enemy.position.y + enemy.size.height/2),
+                    isEnemy: true
+                )
+                
+                gameModel.enemyProjectiles.append(projectile)
+            }
+        }
+    }
+    
+    private func checkCollisions() {
+        // Verificar colisiones entre proyectiles del jugador y enemigos
+        for (projectileIndex, projectile) in gameModel.projectiles.enumerated().reversed() {
+            for (enemyIndex, enemy) in gameModel.enemies.enumerated().reversed() {
+                if enemy.isHit(by: projectile) {
+                    // Eliminar el proyectil
+                    if projectileIndex < gameModel.projectiles.count {
+                        gameModel.projectiles.remove(at: projectileIndex)
+                    }
+                    
+                    // Eliminar el enemigo
+                    if enemyIndex < gameModel.enemies.count {
+                        gameModel.enemies.remove(at: enemyIndex)
+                    }
+                    
+                    // Incrementar la puntuación
+                    gameModel.score += 10
+                    
+                    // Aumentar el nivel cada 100 puntos
+                    if gameModel.score % 100 == 0 {
+                        gameModel.level += 1
+                    }
+                    
+                    break
+                }
+            }
+        }
+        
+        // Verificar colisiones entre proyectiles enemigos y el jugador
+        let playerPosition = CGPoint(x: gameModel.playerPosition, y: getShipYPosition())
+        let playerSize = CGSize(width: shipWidth, height: shipHeight)
+        
+        for (projectileIndex, projectile) in gameModel.enemyProjectiles.enumerated().reversed() {
+            if gameModel.isPlayerHit(playerPosition: playerPosition, playerSize: playerSize, by: projectile) {
+                // Eliminar el proyectil
+                if projectileIndex < gameModel.enemyProjectiles.count {
+                    gameModel.enemyProjectiles.remove(at: projectileIndex)
+                }
+                
+                // Reducir vidas
+                gameModel.lives -= 1
+                
+                // Verificar si el juego ha terminado
+                if gameModel.lives <= 0 {
+                    gameModel.isGameOver = true
+                }
+                
+                break
+            }
+        }
+        
+        // Verificar colisiones entre enemigos y el jugador
+        for (enemyIndex, enemy) in gameModel.enemies.enumerated().reversed() {
+            let enemyRect = CGRect(
+                x: enemy.position.x - enemy.size.width/2,
+                y: enemy.position.y - enemy.size.height/2,
+                width: enemy.size.width,
+                height: enemy.size.height
+            )
+            
+            let playerRect = CGRect(
+                x: playerPosition.x - playerSize.width/2,
+                y: playerPosition.y - playerSize.height/2,
+                width: playerSize.width,
+                height: playerSize.height
+            )
+            
+            if enemyRect.intersects(playerRect) {
+                // Eliminar el enemigo
+                if enemyIndex < gameModel.enemies.count {
+                    gameModel.enemies.remove(at: enemyIndex)
+                }
+                
+                // Reducir vidas
+                gameModel.lives -= 1
+                
+                // Verificar si el juego ha terminado
+                if gameModel.lives <= 0 {
+                    gameModel.isGameOver = true
+                }
+                
+                break
+            }
+        }
     }
     
     // Método para mover la nave del jugador
@@ -122,6 +310,11 @@ class GameViewModel: ObservableObject {
     // Método para obtener la posición Y de la nave
     func getShipYPosition() -> CGFloat {
         return screenHeight * shipYPositionRatio
+    }
+    
+    // Método para reiniciar el juego
+    func restartGame() {
+        gameModel.resetGame()
     }
     
     // Método para incrementar la puntuación
