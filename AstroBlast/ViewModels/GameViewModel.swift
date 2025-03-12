@@ -74,7 +74,16 @@ class GameViewModel: ObservableObject {
     }
     
     private func updateGame(deltaTime: TimeInterval) {
-        if gameModel.isGameOver {
+        if gameModel.isGameOver || gameModel.isLevelCompleted {
+            return
+        }
+        
+        // Actualizar el tiempo transcurrido
+        gameModel.elapsedTime += deltaTime
+        
+        // Comprobar si se ha completado el nivel
+        if gameModel.elapsedTime >= gameModel.levelDuration {
+            gameModel.isLevelCompleted = true
             return
         }
         
@@ -317,13 +326,13 @@ class GameViewModel: ObservableObject {
         gameModel.resetGame()
     }
     
+    // Método para avanzar al siguiente nivel
+    func advanceToNextLevel() {
+        gameModel.advanceToNextLevel()
+    }
+    
     // Método para incrementar la puntuación
     func increaseScore(by points: Int = 10) {
         gameModel.score += points
-    }
-    
-    // Método para avanzar al siguiente nivel
-    func nextLevel() {
-        gameModel.level += 1
     }
 } 

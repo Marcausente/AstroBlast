@@ -13,7 +13,12 @@ struct GameModel {
     var score: Int = 0
     var level: Int = 1
     var isGameOver: Bool = false
+    var isLevelCompleted: Bool = false
     var lives: Int = 3
+    
+    // Tiempo de juego
+    var elapsedTime: TimeInterval = 0
+    var levelDuration: TimeInterval = 180 // 3 minutos en segundos
     
     // Posición del jugador
     var playerPosition: CGFloat = 0 // Posición X de la nave del jugador
@@ -78,11 +83,33 @@ struct GameModel {
         score = 0
         level = 1
         isGameOver = false
+        isLevelCompleted = false
         lives = 3
+        elapsedTime = 0
         projectiles.removeAll()
         enemies.removeAll()
         enemyProjectiles.removeAll()
         lastEnemySpawnTime = 0
         lastEnemyShootTime = 0
+    }
+    
+    // Método para avanzar al siguiente nivel
+    mutating func advanceToNextLevel() {
+        level += 1
+        isLevelCompleted = false
+        elapsedTime = 0
+        projectiles.removeAll()
+        enemies.removeAll()
+        enemyProjectiles.removeAll()
+        lastEnemySpawnTime = 0
+        lastEnemyShootTime = 0
+    }
+    
+    // Método para formatear el tiempo restante
+    func formatTimeRemaining() -> String {
+        let timeRemaining = max(0, levelDuration - elapsedTime)
+        let minutes = Int(timeRemaining) / 60
+        let seconds = Int(timeRemaining) % 60
+        return String(format: "%02d:%02d", minutes, seconds)
     }
 } 

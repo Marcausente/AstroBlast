@@ -61,7 +61,7 @@ struct GameView: View {
                 StarField(starsCount: 150)
                 
                 // Interfaz de juego
-                if !viewModel.gameModel.isGameOver {
+                if !viewModel.gameModel.isGameOver && !viewModel.gameModel.isLevelCompleted {
                     // Puntuación y nivel
                     VStack {
                         HStack {
@@ -88,6 +88,16 @@ struct GameView: View {
                         HStack {
                             Spacer()
                             Text("Puntos: \(viewModel.gameModel.score)")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                                .padding(.top, 10)
+                                .padding(.trailing, 20)
+                        }
+                        
+                        // Contador de tiempo
+                        HStack {
+                            Spacer()
+                            Text("Tiempo: \(viewModel.gameModel.formatTimeRemaining())")
                                 .font(.headline)
                                 .foregroundColor(.white)
                                 .padding(.top, 10)
@@ -160,6 +170,37 @@ struct GameView: View {
                             .padding(.trailing, 30)
                             .padding(.bottom, 50)
                         }
+                    }
+                } else if viewModel.gameModel.isLevelCompleted {
+                    // Pantalla de Victoria
+                    VStack {
+                        Text("¡VICTORIA!")
+                            .font(.largeTitle)
+                            .fontWeight(.bold)
+                            .foregroundColor(.green)
+                            .padding()
+                        
+                        Text("Has acabado el nivel \(viewModel.gameModel.level)")
+                            .font(.title)
+                            .foregroundColor(.white)
+                            .padding()
+                        
+                        Text("Puntuación: \(viewModel.gameModel.score)")
+                            .font(.title2)
+                            .foregroundColor(.white)
+                            .padding()
+                        
+                        Button(action: {
+                            viewModel.advanceToNextLevel()
+                        }) {
+                            Text("Continuar al Nivel \(viewModel.gameModel.level + 1)")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                                .padding()
+                                .background(Color.green)
+                                .cornerRadius(10)
+                        }
+                        .padding(.top, 30)
                     }
                 } else {
                     // Pantalla de Game Over
