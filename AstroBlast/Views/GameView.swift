@@ -50,7 +50,6 @@ struct StarField: View {
 
 struct GameView: View {
     @StateObject private var viewModel = GameViewModel()
-    @State private var dragOffset: CGFloat = 0
     
     var body: some View {
         GeometryReader { geometry in
@@ -99,18 +98,20 @@ struct GameView: View {
                     .scaledToFit()
                     .frame(width: 80, height: 80)
                     .position(x: viewModel.gameModel.playerPosition, y: geometry.size.height - 120)
-                    .gesture(
-                        DragGesture()
-                            .onChanged { value in
-                                viewModel.movePlayer(to: value.location.x)
-                            }
-                    )
                 
-                // Botón de disparo
+                // Controles
                 VStack {
                     Spacer()
                     HStack {
+                        // Joystick (izquierda)
+                        JoystickView(direction: $viewModel.joystickDirection)
+                            .frame(width: 120, height: 120)
+                            .padding(.leading, 20)
+                            .padding(.bottom, 20)
+                        
                         Spacer()
+                        
+                        // Botón de disparo (derecha)
                         Button(action: {
                             viewModel.shoot()
                         }) {

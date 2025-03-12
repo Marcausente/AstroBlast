@@ -21,6 +21,12 @@ class GameViewModel: ObservableObject {
     private let shipYPosition: CGFloat = 120 // Distancia desde abajo
     private let shipHeight: CGFloat = 80 // Altura de la nave
     
+    // Dirección del joystick (-1 a 1)
+    @Published var joystickDirection: CGFloat = 0
+    
+    // Velocidad de movimiento de la nave
+    private let shipSpeed: CGFloat = 10
+    
     init() {
         startGameLoop()
     }
@@ -37,6 +43,17 @@ class GameViewModel: ObservableObject {
     
     private func updateGame() {
         updateProjectiles()
+        updateShipPosition()
+    }
+    
+    private func updateShipPosition() {
+        if joystickDirection != 0 {
+            // Calculamos el nuevo desplazamiento basado en la dirección del joystick
+            let movement = joystickDirection * shipSpeed
+            
+            // Movemos la nave
+            movePlayer(to: gameModel.playerPosition + movement)
+        }
     }
     
     private func updateProjectiles() {
