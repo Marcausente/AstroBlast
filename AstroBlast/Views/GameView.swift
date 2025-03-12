@@ -127,11 +127,31 @@ struct GameView: View {
                     
                     // Proyectiles enemigos
                     ForEach(viewModel.gameModel.enemyProjectiles) { projectile in
-                        Circle()
-                            .fill(Color.red)
-                            .frame(width: 6, height: 6)
-                            .position(projectile.position)
-                            .shadow(color: .red, radius: 4, x: 0, y: 0)
+                        // Forma de lágrima para los proyectiles enemigos
+                        ZStack {
+                            // Círculo principal
+                            Circle()
+                                .fill(Color.red)
+                                .frame(width: 8, height: 8)
+                            
+                            // Estela del proyectil
+                            Path { path in
+                                let length: CGFloat = 12
+                                
+                                // Punto inicial (centro del círculo)
+                                path.move(to: CGPoint(x: 0, y: 0))
+                                
+                                // Punto final (en dirección opuesta a la dirección del proyectil)
+                                path.addLine(to: CGPoint(
+                                    x: -projectile.direction.dx * length,
+                                    y: -projectile.direction.dy * length
+                                ))
+                            }
+                            .stroke(Color.red.opacity(0.7), lineWidth: 3)
+                            .blur(radius: 2)
+                        }
+                        .position(projectile.position)
+                        .shadow(color: .red, radius: 3, x: 0, y: 0)
                     }
                     
                     // Nave del jugador

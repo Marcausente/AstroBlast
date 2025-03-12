@@ -43,6 +43,21 @@ struct GameModel {
         let id = UUID()
         var position: CGPoint
         var isEnemy: Bool = false // Para distinguir entre proyectiles del jugador y enemigos
+        var direction: CGVector = CGVector(dx: 0, dy: -1) // Por defecto, hacia arriba
+        
+        // Método para calcular la dirección hacia un punto objetivo
+        static func directionToTarget(from start: CGPoint, to target: CGPoint) -> CGVector {
+            let dx = target.x - start.x
+            let dy = target.y - start.y
+            let distance = sqrt(dx * dx + dy * dy)
+            
+            // Normalizar el vector para obtener la dirección
+            if distance > 0 {
+                return CGVector(dx: dx / distance, dy: dy / distance)
+            } else {
+                return CGVector(dx: 0, dy: 1) // Si están en el mismo punto, por defecto hacia abajo
+            }
+        }
     }
     
     // Estructura para enemigos

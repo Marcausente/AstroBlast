@@ -36,7 +36,8 @@ class GameViewModel: ObservableObject {
     private let enemySpawnInterval: TimeInterval = 2.0 // Tiempo entre generación de enemigos
     private let enemyShootInterval: TimeInterval = 1.5 // Tiempo entre disparos enemigos
     private let enemySpeed: CGFloat = 2.0 // Velocidad de movimiento de los enemigos
-    private let enemyProjectileSpeed: CGFloat = 8.0 // Velocidad de los proyectiles enemigos
+    private let enemyProjectileSpeed: CGFloat = 5.0 // Velocidad de los proyectiles enemigos
+    private let playerProjectileSpeed: CGFloat = 15.0 // Velocidad de los proyectiles del jugador
     
     init() {
         // Actualizar las dimensiones de la pantalla
@@ -111,10 +112,16 @@ class GameViewModel: ObservableObject {
         for i in 0..<gameModel.projectiles.count {
             if i < gameModel.projectiles.count {
                 var projectile = gameModel.projectiles[i]
-                projectile.position.y -= 15 // Velocidad del proyectil aumentada
+                
+                // Mover el proyectil en la dirección establecida
+                projectile.position.x += projectile.direction.dx * playerProjectileSpeed
+                projectile.position.y += projectile.direction.dy * playerProjectileSpeed
                 
                 // Si el proyectil sale de la pantalla, lo eliminamos
-                if projectile.position.y < 0 {
+                if projectile.position.y < 0 || 
+                   projectile.position.y > screenHeight ||
+                   projectile.position.x < 0 || 
+                   projectile.position.x > screenWidth {
                     gameModel.projectiles.remove(at: i)
                 } else {
                     gameModel.projectiles[i] = projectile
@@ -146,14 +153,20 @@ class GameViewModel: ObservableObject {
     }
     
     private func updateEnemyProjectiles() {
-        // Mover los proyectiles enemigos hacia abajo
+        // Mover los proyectiles enemigos en su dirección
         for i in 0..<gameModel.enemyProjectiles.count {
             if i < gameModel.enemyProjectiles.count {
                 var projectile = gameModel.enemyProjectiles[i]
-                projectile.position.y += enemyProjectileSpeed
+                
+                // Mover el proyectil en la dirección establecida
+                projectile.position.x += projectile.direction.dx * enemyProjectileSpeed
+                projectile.position.y += projectile.direction.dy * enemyProjectileSpeed
                 
                 // Si el proyectil sale de la pantalla, lo eliminamos
-                if projectile.position.y > screenHeight {
+                if projectile.position.y < 0 || 
+                   projectile.position.y > screenHeight ||
+                   projectile.position.x < 0 || 
+                   projectile.position.x > screenWidth {
                     gameModel.enemyProjectiles.remove(at: i)
                 } else {
                     gameModel.enemyProjectiles[i] = projectile
@@ -193,10 +206,20 @@ class GameViewModel: ObservableObject {
                 let randomIndex = Int.random(in: 0..<gameModel.enemies.count)
                 let enemy = gameModel.enemies[randomIndex]
                 
-                // Crear un proyectil enemigo
+                // Posición del jugador
+                let playerPosition = CGPoint(x: gameModel.playerPosition, y: getShipYPosition())
+                
+                // Calcular la dirección hacia el jugador
+                let direction = GameModel.Projectile.directionToTarget(
+                    from: enemy.position,
+                    to: playerPosition
+                )
+                
+                // Crear un proyectil enemigo dirigido hacia el jugador
                 let projectile = GameModel.Projectile(
                     position: CGPoint(x: enemy.position.x, y: enemy.position.y + enemy.size.height/2),
-                    isEnemy: true
+                    isEnemy: true,
+                    direction: direction
                 )
                 
                 gameModel.enemyProjectiles.append(projectile)
@@ -311,7 +334,9 @@ class GameViewModel: ObservableObject {
         let projectileY = shipY - shipHeight / 2 - 5 // 5 píxeles por encima de la nave
         
         let projectile = GameModel.Projectile(
-            position: CGPoint(x: gameModel.playerPosition, y: projectileY)
+            position: CGPoint(x: gameModel.playerPosition, y: projectileY),
+            isEnemy: false,
+            direction: CGVector(dx: 0, dy: -1) // Dirección hacia arriba
         )
         gameModel.projectiles.append(projectile)
     }
