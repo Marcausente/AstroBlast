@@ -97,7 +97,7 @@ struct GameView: View {
                     .resizable()
                     .scaledToFit()
                     .frame(width: 80, height: 80)
-                    .position(x: viewModel.gameModel.playerPosition, y: geometry.size.height - 120)
+                    .position(x: viewModel.gameModel.playerPosition, y: viewModel.getShipYPosition())
                 
                 // Controles
                 VStack {
@@ -136,5 +136,9 @@ struct GameView: View {
             }
         }
         .statusBar(hidden: true)
+        // Forzar orientación vertical
+        .onAppear {
+            UIDevice.current.setValue(UIInterfaceOrientation.portrait.rawValue, forKey: "orientation")
+        }
     }
 }
