@@ -107,7 +107,7 @@ struct GameView: View {
                         JoystickView(direction: $viewModel.joystickDirection)
                             .frame(width: 100, height: 100)
                             .padding(.leading, 20)
-                            .padding(.bottom, 40)
+                            .padding(.bottom, 50)
                         
                         Spacer()
                         
@@ -126,7 +126,7 @@ struct GameView: View {
                                 .shadow(color: .red.opacity(0.7), radius: 5, x: 0, y: 0)
                         }
                         .padding(.trailing, 30)
-                        .padding(.bottom, 40)
+                        .padding(.bottom, 50)
                     }
                 }
             }

@@ -13,9 +13,9 @@ struct JoystickView: View {
     @State private var isDragging: Bool = false
     
     // Constantes para el joystick
-    private let baseSize: CGFloat = 100
-    private let stickSize: CGFloat = 50
-    private let maxDistance: CGFloat = 30
+    private let baseSize: CGFloat = 80
+    private let stickSize: CGFloat = 40
+    private let maxDistance: CGFloat = 25
     
     var body: some View {
         ZStack {
