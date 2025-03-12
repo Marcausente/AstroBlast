@@ -205,6 +205,11 @@ struct GameView: View {
                             .foregroundColor(.white)
                             .padding()
                         
+                        Text("¡Sobreviviste durante 3 minutos!")
+                            .font(.title2)
+                            .foregroundColor(.white)
+                            .padding(.bottom, 10)
+                        
                         Text("Puntuación: \(viewModel.gameModel.score)")
                             .font(.title2)
                             .foregroundColor(.white)

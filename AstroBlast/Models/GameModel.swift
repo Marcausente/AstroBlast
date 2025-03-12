@@ -110,7 +110,7 @@ struct GameModel {
     
     // Método para avanzar al siguiente nivel
     mutating func advanceToNextLevel() {
-        level += 1
+        level += 1 // Incrementar el nivel
         isLevelCompleted = false
         elapsedTime = 0
         projectiles.removeAll()
@@ -118,6 +118,9 @@ struct GameModel {
         enemyProjectiles.removeAll()
         lastEnemySpawnTime = 0
         lastEnemyShootTime = 0
+        
+        // Aumentar la dificultad en niveles superiores
+        // Por ahora, mantenemos la misma duración para todos los niveles
     }
     
     // Método para formatear el tiempo restante

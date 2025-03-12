@@ -245,10 +245,8 @@ class GameViewModel: ObservableObject {
                     // Incrementar la puntuación
                     gameModel.score += 10
                     
-                    // Aumentar el nivel cada 100 puntos
-                    if gameModel.score % 100 == 0 {
-                        gameModel.level += 1
-                    }
+                    // Ya no incrementamos el nivel basado en la puntuación
+                    // El nivel solo avanzará cuando se complete el tiempo
                     
                     break
                 }
