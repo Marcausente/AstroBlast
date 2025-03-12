@@ -10,8 +10,8 @@ import SwiftUI
 // Clase para manejar la orientación a nivel de aplicación
 class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication, supportedInterfaceOrientationsFor window: UIWindow?) -> UIInterfaceOrientationMask {
-        // Solo permitir orientación vertical (portrait)
-        return .portrait
+        // Usar la orientación configurada en OrientationManager
+        return OrientationManager.shared.orientation
     }
 }
 
@@ -22,21 +22,13 @@ struct AstroBlastApp: App {
     
     init() {
         // Forzar la orientación vertical
-        AppUtility.lockOrientation(.portrait)
+        OrientationManager.shared.lockOrientation(.portrait)
     }
     
     var body: some Scene {
         WindowGroup {
             ContentView()
-        }
-    }
-}
-
-// Utilidad para bloquear la orientación
-struct AppUtility {
-    static func lockOrientation(_ orientation: UIInterfaceOrientationMask) {
-        if let delegate = UIApplication.shared.delegate as? AppDelegate {
-            UIDevice.current.setValue(UIInterfaceOrientation.portrait.rawValue, forKey: "orientation")
+                .lockDeviceOrientation()
         }
     }
 }

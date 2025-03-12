@@ -22,8 +22,8 @@ class GameViewModel: ObservableObject {
     private let shipWidth: CGFloat = 80 // Ancho de la nave
     
     // Posición relativa de la nave (porcentaje de la pantalla)
-    // Ahora la nave estará a un 85% desde la parte superior (15% desde abajo)
-    private let shipYPositionRatio: CGFloat = 0.85
+    // Ajustamos la posición para que la nave esté más arriba (75% desde la parte superior)
+    private let shipYPositionRatio: CGFloat = 0.75
     
     // Dirección del joystick (-1 a 1)
     @Published var joystickDirection: CGFloat = 0

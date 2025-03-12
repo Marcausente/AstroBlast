@@ -105,9 +105,9 @@ struct GameView: View {
                     HStack {
                         // Joystick (izquierda)
                         JoystickView(direction: $viewModel.joystickDirection)
-                            .frame(width: 120, height: 120)
+                            .frame(width: 100, height: 100)
                             .padding(.leading, 20)
-                            .padding(.bottom, 20)
+                            .padding(.bottom, 40)
                         
                         Spacer()
                         
@@ -126,19 +126,19 @@ struct GameView: View {
                                 .shadow(color: .red.opacity(0.7), radius: 5, x: 0, y: 0)
                         }
                         .padding(.trailing, 30)
-                        .padding(.bottom, 30)
+                        .padding(.bottom, 40)
                     }
                 }
             }
             .onAppear {
                 // Inicializar la posición del jugador en el centro
                 viewModel.movePlayer(to: geometry.size.width / 2)
+                
+                // Forzar orientación vertical
+                OrientationManager.shared.lockOrientation(.portrait)
             }
         }
         .statusBar(hidden: true)
-        // Forzar orientación vertical
-        .onAppear {
-            UIDevice.current.setValue(UIInterfaceOrientation.portrait.rawValue, forKey: "orientation")
-        }
+        .lockDeviceOrientation()
     }
 }
