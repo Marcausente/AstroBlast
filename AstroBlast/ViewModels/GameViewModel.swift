@@ -63,11 +63,17 @@ class GameViewModel: ObservableObject {
         
         // Registrar para notificaciones de cambio de orientación
         NotificationCenter.default.addObserver(self, selector: #selector(updateScreenDimensions), name: UIDevice.orientationDidChangeNotification, object: nil)
+        
+        // Iniciar la música del juego
+        AudioManager.shared.playBackgroundMusic(filename: "Sounds/spacemusic.mp3")
     }
     
     deinit {
         timer?.invalidate()
         NotificationCenter.default.removeObserver(self)
+        
+        // Detener la música al salir del juego
+        AudioManager.shared.stopBackgroundMusic()
     }
     
     // Configurar la dificultad según el nivel
@@ -143,7 +149,12 @@ class GameViewModel: ObservableObject {
     }
     
     private func updateGame(deltaTime: TimeInterval) {
-        if gameModel.isGameOver || gameModel.isLevelCompleted || gameModel.isPaused {
+        if gameModel.isGameOver || gameModel.isLevelCompleted {
+            return
+        }
+        
+        // Si el juego está pausado, no actualizar
+        if gameModel.isPaused {
             return
         }
         
@@ -564,6 +575,9 @@ class GameViewModel: ObservableObject {
             direction: CGVector(dx: 0, dy: -1) // Dirección hacia arriba
         )
         gameModel.projectiles.append(projectile)
+        
+        // Reproducir el sonido de disparo
+        AudioManager.shared.playSoundEffect(filename: "Sounds/Shotsound.mp3")
     }
     
     // Método para obtener la posición Y de la nave
@@ -593,5 +607,12 @@ class GameViewModel: ObservableObject {
     // Método para alternar el estado de pausa
     func togglePause() {
         gameModel.togglePause()
+        
+        // Pausar o reanudar la música según el estado del juego
+        if gameModel.isPaused {
+            AudioManager.shared.pauseBackgroundMusic()
+        } else {
+            AudioManager.shared.resumeBackgroundMusic()
+        }
     }
 } 

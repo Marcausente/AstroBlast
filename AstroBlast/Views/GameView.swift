@@ -430,6 +430,10 @@ struct GameView: View {
                 // Forzar orientación vertical
                 OrientationManager.shared.lockOrientation(.portrait)
             }
+            .onDisappear {
+                // Reanudar la música del menú cuando se vuelve al menú principal
+                AudioManager.shared.playBackgroundMusic(filename: "Sounds/menumusic.mp3")
+            }
         }
         .statusBar(hidden: true)
         .lockDeviceOrientation()
