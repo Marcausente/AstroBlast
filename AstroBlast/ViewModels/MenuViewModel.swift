@@ -19,6 +19,38 @@ class MenuViewModel: ObservableObject {
     @Published var animateBackground = false
     @Published var animateStars = false
     
+    // Inicializador
+    init() {
+        // Configurar observadores para cambios en las opciones
+        setupObservers()
+    }
+    
+    // Configurar observadores para cambios en las opciones
+    private func setupObservers() {
+        // Observar cambios en la opción de música
+        $menuModel
+            .map(\.options.musicEnabled)
+            .removeDuplicates()
+            .sink { [weak self] musicEnabled in
+                self?.handleMusicEnabledChange(musicEnabled)
+            }
+            .store(in: &cancellables)
+    }
+    
+    // Manejar cambios en la opción de música
+    private func handleMusicEnabledChange(_ enabled: Bool) {
+        if enabled {
+            // Iniciar la reproducción de música si está habilitada
+            AudioManager.shared.playBackgroundMusic(filename: "Sounds/menumusic.mp3")
+        } else {
+            // Detener la música si está deshabilitada
+            AudioManager.shared.stopBackgroundMusic()
+        }
+    }
+    
+    // Almacenamiento para cancelables
+    private var cancellables = Set<AnyCancellable>()
+    
     // Método para navegar a una sección del menú
     func navigateTo(_ state: MenuModel.MenuState) {
         menuModel.navigateTo(state)
@@ -33,6 +65,12 @@ class MenuViewModel: ObservableObject {
     func startGame(level: MenuModel.GameLevel) {
         if menuModel.startGame(level: level) {
             selectedLevel = level
+            
+            // Pausar la música del menú antes de iniciar el juego
+            if menuModel.options.musicEnabled {
+                AudioManager.shared.pauseBackgroundMusic()
+            }
+            
             showGameView = true
         } else {
             // El nivel está bloqueado, podríamos mostrar un mensaje
@@ -50,10 +88,15 @@ class MenuViewModel: ObservableObject {
     func updateOptions(soundEnabled: Bool? = nil, musicEnabled: Bool? = nil, vibrationEnabled: Bool? = nil, difficulty: MenuModel.GameOptions.Difficulty? = nil) {
         if let soundEnabled = soundEnabled {
             menuModel.options.soundEnabled = soundEnabled
+            
+            // Actualizar el estado de silencio en el AudioManager
+            AudioManager.shared.isMuted = !soundEnabled
         }
         
         if let musicEnabled = musicEnabled {
             menuModel.options.musicEnabled = musicEnabled
+            
+            // La lógica para iniciar/detener la música se maneja en el observador
         }
         
         if let vibrationEnabled = vibrationEnabled {
@@ -67,6 +110,9 @@ class MenuViewModel: ObservableObject {
     
     // Método para salir de la aplicación
     func exitGame() {
+        // Detener la música antes de salir
+        AudioManager.shared.stopBackgroundMusic()
+        
         // En una aplicación real, esto podría guardar el estado del juego antes de salir
         exit(0)
     }
@@ -81,7 +127,7 @@ class MenuViewModel: ObservableObject {
         showExitConfirmation = false
     }
     
-    // Iniciar animaciones
+    // Iniciar animaciones y música
     func startAnimations() {
         withAnimation(Animation.easeInOut(duration: 20).repeatForever(autoreverses: true)) {
             animateBackground = true
@@ -89,6 +135,11 @@ class MenuViewModel: ObservableObject {
         
         withAnimation(Animation.easeInOut(duration: 15).repeatForever(autoreverses: true)) {
             animateStars = true
+        }
+        
+        // Iniciar la música del menú si está habilitada
+        if menuModel.options.musicEnabled {
+            AudioManager.shared.playBackgroundMusic(filename: "Sounds/menumusic.mp3")
         }
     }
 } 
