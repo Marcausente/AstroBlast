@@ -33,11 +33,11 @@ class GameViewModel: ObservableObject {
     private let shipSpeed: CGFloat = 10
     
     // Constantes para los enemigos
-    private let enemySpawnInterval: TimeInterval = 2.0 // Tiempo entre generación de enemigos
-    private let enemyShootInterval: TimeInterval = 1.5 // Tiempo entre disparos enemigos
-    private let enemySpeed: CGFloat = 2.0 // Velocidad de movimiento de los enemigos
-    private let enemyProjectileSpeed: CGFloat = 5.0 // Velocidad de los proyectiles enemigos
-    private let playerProjectileSpeed: CGFloat = 15.0 // Velocidad de los proyectiles del jugador
+    private var enemySpawnInterval: TimeInterval = 2.0 // Tiempo entre generación de enemigos
+    private var enemyShootInterval: TimeInterval = 1.5 // Tiempo entre disparos enemigos
+    private var enemySpeed: CGFloat = 2.0 // Velocidad de movimiento de los enemigos
+    private var enemyProjectileSpeed: CGFloat = 5.0 // Velocidad de los proyectiles enemigos
+    private var playerProjectileSpeed: CGFloat = 15.0 // Velocidad de los proyectiles del jugador
     
     // Posición Y objetivo para los enemigos (mitad de la pantalla)
     private var enemyTargetY: CGFloat {
@@ -47,7 +47,14 @@ class GameViewModel: ObservableObject {
     // Distancia mínima entre enemigos
     private let minEnemyDistance: CGFloat = 70
     
-    init() {
+    // Inicializador que acepta un nivel
+    init(level: Int = 1) {
+        // Configurar el nivel inicial
+        gameModel.level = level
+        
+        // Ajustar la dificultad según el nivel
+        configureForLevel(level)
+        
         // Actualizar las dimensiones de la pantalla
         updateScreenDimensions()
         
@@ -61,6 +68,59 @@ class GameViewModel: ObservableObject {
     deinit {
         timer?.invalidate()
         NotificationCenter.default.removeObserver(self)
+    }
+    
+    // Configurar la dificultad según el nivel
+    private func configureForLevel(_ level: Int) {
+        switch level {
+        case 1:
+            // Nivel 1: Configuración básica
+            enemySpawnInterval = 2.0
+            enemyShootInterval = 1.5
+            enemySpeed = 2.0
+            enemyProjectileSpeed = 5.0
+            gameModel.levelDuration = 120 // 2 minutos
+            
+        case 2:
+            // Nivel 2: Más enemigos y más rápidos
+            enemySpawnInterval = 1.5
+            enemyShootInterval = 1.3
+            enemySpeed = 2.5
+            enemyProjectileSpeed = 5.5
+            gameModel.levelDuration = 150 // 2.5 minutos
+            
+        case 3:
+            // Nivel 3: Enemigos más resistentes
+            enemySpawnInterval = 1.3
+            enemyShootInterval = 1.2
+            enemySpeed = 3.0
+            enemyProjectileSpeed = 6.0
+            gameModel.levelDuration = 180 // 3 minutos
+            
+        case 4:
+            // Nivel 4: Enemigos disparan con mayor frecuencia
+            enemySpawnInterval = 1.2
+            enemyShootInterval = 0.8
+            enemySpeed = 3.5
+            enemyProjectileSpeed = 6.5
+            gameModel.levelDuration = 210 // 3.5 minutos
+            
+        case 5:
+            // Nivel 5: Batalla final
+            enemySpawnInterval = 1.0
+            enemyShootInterval = 0.7
+            enemySpeed = 4.0
+            enemyProjectileSpeed = 7.0
+            gameModel.levelDuration = 240 // 4 minutos
+            
+        default:
+            // Niveles superiores: Dificultad extrema
+            enemySpawnInterval = max(0.5, 2.0 - (Double(level) * 0.2))
+            enemyShootInterval = max(0.5, 1.5 - (Double(level) * 0.1))
+            enemySpeed = min(6.0, 2.0 + (CGFloat(level) * 0.5))
+            enemyProjectileSpeed = min(10.0, 5.0 + (CGFloat(level) * 0.5))
+            gameModel.levelDuration = min(300, 120 + (Double(level) * 30)) // Máximo 5 minutos
+        }
     }
     
     @objc private func updateScreenDimensions() {
@@ -275,11 +335,17 @@ class GameViewModel: ObservableObject {
             // Solo generar si hay espacio
             if canSpawn {
                 // Crear un nuevo enemigo en la parte superior de la pantalla
-                let enemy = GameModel.Enemy(
+                var enemy = GameModel.Enemy(
                     position: CGPoint(x: randomX, y: 50),
                     isMoving: true,
                     targetY: enemyTargetY
                 )
+                
+                // En niveles superiores, algunos enemigos tienen más salud
+                if gameModel.level >= 3 && Int.random(in: 1...10) <= 3 {
+                    enemy.health = 2
+                    enemy.size = CGSize(width: 70, height: 70) // Enemigos más grandes
+                }
                 
                 gameModel.enemies.append(enemy)
             }
@@ -329,16 +395,26 @@ class GameViewModel: ObservableObject {
                         gameModel.projectiles.remove(at: projectileIndex)
                     }
                     
-                    // Eliminar el enemigo
+                    // Reducir la salud del enemigo o eliminarlo
                     if enemyIndex < gameModel.enemies.count {
-                        gameModel.enemies.remove(at: enemyIndex)
+                        var updatedEnemy = enemy
+                        updatedEnemy.health -= 1
+                        
+                        if updatedEnemy.health <= 0 {
+                            // Eliminar el enemigo
+                            gameModel.enemies.remove(at: enemyIndex)
+                            
+                            // Incrementar la puntuación (más puntos para enemigos más difíciles)
+                            let basePoints = 10
+                            let levelMultiplier = max(1, gameModel.level)
+                            let healthMultiplier = enemy.health > 1 ? 2 : 1
+                            
+                            gameModel.score += basePoints * levelMultiplier * healthMultiplier
+                        } else {
+                            // Actualizar el enemigo con la salud reducida
+                            gameModel.enemies[enemyIndex] = updatedEnemy
+                        }
                     }
-                    
-                    // Incrementar la puntuación
-                    gameModel.score += 10
-                    
-                    // Ya no incrementamos el nivel basado en la puntuación
-                    // El nivel solo avanzará cuando se complete el tiempo
                     
                     break
                 }
@@ -444,11 +520,15 @@ class GameViewModel: ObservableObject {
     // Método para reiniciar el juego
     func restartGame() {
         gameModel.resetGame()
+        gameModel.level = max(1, gameModel.level) // Mantener el nivel actual
+        configureForLevel(gameModel.level) // Reconfigurar para el nivel actual
     }
     
     // Método para avanzar al siguiente nivel
     func advanceToNextLevel() {
+        let nextLevel = gameModel.level + 1
         gameModel.advanceToNextLevel()
+        configureForLevel(nextLevel) // Configurar para el nuevo nivel
     }
     
     // Método para incrementar la puntuación
