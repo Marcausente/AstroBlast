@@ -160,6 +160,7 @@ class GameViewModel: ObservableObject {
         updateShipPosition()
         updateEnemies(deltaTime: deltaTime)
         updateEnemyProjectiles()
+        updateExplosions(deltaTime: deltaTime)
         checkCollisions()
         spawnEnemies(deltaTime: deltaTime)
         enemyShoot(deltaTime: deltaTime)
@@ -311,6 +312,24 @@ class GameViewModel: ObservableObject {
         }
     }
     
+    private func updateExplosions(deltaTime: TimeInterval) {
+        // Actualizar todas las explosiones
+        for i in (0..<gameModel.explosions.count).reversed() {
+            if i < gameModel.explosions.count {
+                var explosion = gameModel.explosions[i]
+                
+                // Actualizar la explosión y verificar si debe mantenerse
+                if !explosion.update(deltaTime: deltaTime) {
+                    // Si la explosión ha terminado, eliminarla
+                    gameModel.explosions.remove(at: i)
+                } else {
+                    // Actualizar la explosión en el modelo
+                    gameModel.explosions[i] = explosion
+                }
+            }
+        }
+    }
+    
     private func spawnEnemies(deltaTime: TimeInterval) {
         gameModel.lastEnemySpawnTime += deltaTime
         
@@ -401,6 +420,13 @@ class GameViewModel: ObservableObject {
                         updatedEnemy.health -= 1
                         
                         if updatedEnemy.health <= 0 {
+                            // Crear una explosión en la posición del enemigo
+                            gameModel.createExplosion(
+                                at: enemy.position,
+                                size: enemy.size.width,
+                                isEnemy: true
+                            )
+                            
                             // Eliminar el enemigo
                             gameModel.enemies.remove(at: enemyIndex)
                             
@@ -432,11 +458,25 @@ class GameViewModel: ObservableObject {
                     gameModel.enemyProjectiles.remove(at: projectileIndex)
                 }
                 
+                // Crear una pequeña explosión donde impactó el proyectil
+                gameModel.createExplosion(
+                    at: projectile.position,
+                    size: 30,
+                    isEnemy: false
+                )
+                
                 // Reducir vidas
                 gameModel.lives -= 1
                 
                 // Verificar si el juego ha terminado
                 if gameModel.lives <= 0 {
+                    // Crear una explosión grande para la nave del jugador
+                    gameModel.createExplosion(
+                        at: playerPosition,
+                        size: shipWidth * 1.5,
+                        isEnemy: false
+                    )
+                    
                     gameModel.isGameOver = true
                 }
                 
@@ -461,6 +501,13 @@ class GameViewModel: ObservableObject {
             )
             
             if enemyRect.intersects(playerRect) {
+                // Crear una explosión en la posición del enemigo
+                gameModel.createExplosion(
+                    at: enemy.position,
+                    size: enemy.size.width,
+                    isEnemy: true
+                )
+                
                 // Eliminar el enemigo
                 if enemyIndex < gameModel.enemies.count {
                     gameModel.enemies.remove(at: enemyIndex)
@@ -471,6 +518,13 @@ class GameViewModel: ObservableObject {
                 
                 // Verificar si el juego ha terminado
                 if gameModel.lives <= 0 {
+                    // Crear una explosión grande para la nave del jugador
+                    gameModel.createExplosion(
+                        at: playerPosition,
+                        size: shipWidth * 1.5,
+                        isEnemy: false
+                    )
+                    
                     gameModel.isGameOver = true
                 }
                 
