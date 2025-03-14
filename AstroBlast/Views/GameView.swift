@@ -49,8 +49,9 @@ struct StarField: View {
 }
 
 struct GameView: View {
-    @StateObject private var viewModel = GameViewModel()
+    @StateObject private var viewModel: GameViewModel
     @State private var showVictoryScreen = false
+    @Environment(\.presentationMode) var presentationMode
     
     // Determinar si estamos en iPad
     private var isIPad: Bool {
@@ -70,6 +71,11 @@ struct GameView: View {
     // Padding para los controles basado en el dispositivo
     private var controlsPadding: CGFloat {
         return isIPad ? 80 : 50
+    }
+    
+    // Inicializador que acepta un nivel
+    init(level: Int = 1) {
+        _viewModel = StateObject(wrappedValue: GameViewModel(level: level))
     }
     
     var body: some View {
@@ -248,15 +254,29 @@ struct GameView: View {
                             .foregroundColor(.white)
                             .padding()
                         
-                        Button(action: {
-                            viewModel.advanceToNextLevel()
-                        }) {
-                            Text("Continuar al Nivel \(viewModel.gameModel.level + 1)")
-                                .font(.headline)
-                                .foregroundColor(.white)
-                                .padding()
-                                .background(Color.green)
-                                .cornerRadius(10)
+                        HStack(spacing: 20) {
+                            Button(action: {
+                                // Volver al menú
+                                presentationMode.wrappedValue.dismiss()
+                            }) {
+                                Text("Menú Principal")
+                                    .font(.headline)
+                                    .foregroundColor(.white)
+                                    .padding()
+                                    .background(Color.blue)
+                                    .cornerRadius(10)
+                            }
+                            
+                            Button(action: {
+                                viewModel.advanceToNextLevel()
+                            }) {
+                                Text("Siguiente Nivel")
+                                    .font(.headline)
+                                    .foregroundColor(.white)
+                                    .padding()
+                                    .background(Color.green)
+                                    .cornerRadius(10)
+                            }
                         }
                         .padding(.top, 30)
                     }
@@ -279,15 +299,29 @@ struct GameView: View {
                             .foregroundColor(.white)
                             .padding()
                         
-                        Button(action: {
-                            viewModel.restartGame()
-                        }) {
-                            Text("Reiniciar Juego")
-                                .font(.headline)
-                                .foregroundColor(.white)
-                                .padding()
-                                .background(Color.blue)
-                                .cornerRadius(10)
+                        HStack(spacing: 20) {
+                            Button(action: {
+                                // Volver al menú
+                                presentationMode.wrappedValue.dismiss()
+                            }) {
+                                Text("Menú Principal")
+                                    .font(.headline)
+                                    .foregroundColor(.white)
+                                    .padding()
+                                    .background(Color.blue)
+                                    .cornerRadius(10)
+                            }
+                            
+                            Button(action: {
+                                viewModel.restartGame()
+                            }) {
+                                Text("Reintentar")
+                                    .font(.headline)
+                                    .foregroundColor(.white)
+                                    .padding()
+                                    .background(Color.red)
+                                    .cornerRadius(10)
+                            }
                         }
                         .padding(.top, 30)
                     }
@@ -315,6 +349,15 @@ struct GameView: View {
                         .font(.title)
                         .padding()
                         .background(Color.red)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                        
+                        Button("Menú Principal") {
+                            presentationMode.wrappedValue.dismiss()
+                        }
+                        .font(.title)
+                        .padding()
+                        .background(Color.purple)
                         .foregroundColor(.white)
                         .cornerRadius(10)
                     }
