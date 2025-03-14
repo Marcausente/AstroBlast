@@ -48,6 +48,53 @@ struct StarField: View {
     }
 }
 
+// Vista para la explosión
+struct ExplosionView: View {
+    let explosion: GameModel.Explosion
+    
+    var body: some View {
+        ZStack {
+            // Núcleo de la explosión
+            Circle()
+                .fill(explosion.isEnemy ? Color.orange : Color.red)
+                .frame(width: explosion.size * explosion.scale, height: explosion.size * explosion.scale)
+                .opacity(explosion.opacity)
+            
+            // Ondas de la explosión
+            ForEach(0..<3) { i in
+                Circle()
+                    .stroke(
+                        explosion.isEnemy ? 
+                            Color.orange.opacity(0.7 - Double(i) * 0.2) : 
+                            Color.red.opacity(0.7 - Double(i) * 0.2),
+                        lineWidth: 3 - CGFloat(i)
+                    )
+                    .frame(
+                        width: explosion.size * explosion.scale * (1.0 + CGFloat(i) * 0.2),
+                        height: explosion.size * explosion.scale * (1.0 + CGFloat(i) * 0.2)
+                    )
+                    .opacity(explosion.opacity * (1.0 - Double(i) * 0.2))
+            }
+            
+            // Partículas de la explosión
+            ForEach(0..<8) { i in
+                let angle = Double(i) * .pi / 4.0
+                let distance = explosion.size * explosion.scale * 0.6
+                
+                Circle()
+                    .fill(explosion.isEnemy ? Color.yellow : Color.red)
+                    .frame(width: 4, height: 4)
+                    .position(
+                        x: cos(angle) * distance,
+                        y: sin(angle) * distance
+                    )
+                    .opacity(explosion.opacity * 0.8)
+            }
+        }
+        .position(explosion.position)
+    }
+}
+
 struct GameView: View {
     @StateObject private var viewModel: GameViewModel
     @State private var showVictoryScreen = false
@@ -193,6 +240,11 @@ struct GameView: View {
                         .shadow(color: .red, radius: 3, x: 0, y: 0)
                     }
                     
+                    // Explosiones
+                    ForEach(viewModel.gameModel.explosions) { explosion in
+                        ExplosionView(explosion: explosion)
+                    }
+                    
                     // Nave del jugador
                     Image("Nave")
                         .resizable()
@@ -325,6 +377,11 @@ struct GameView: View {
                         }
                         .padding(.top, 30)
                     }
+                }
+                
+                // Explosiones (siempre visibles, incluso en pantallas de victoria o game over)
+                ForEach(viewModel.gameModel.explosions) { explosion in
+                    ExplosionView(explosion: explosion)
                 }
                 
                 // Pantalla de Pausa
