@@ -30,7 +30,7 @@ class GameViewModel: ObservableObject {
     @Published var joystickDirection: CGFloat = 0
     
     // Velocidad de movimiento de la nave
-    private let shipSpeed: CGFloat = 10
+    private let shipSpeed: CGFloat = 18 // Aumentada de 10 a 18 para un movimiento más rápido
     
     // Constantes para los enemigos
     private var enemySpawnInterval: TimeInterval = 2.0 // Tiempo entre generación de enemigos
