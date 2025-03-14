@@ -33,6 +33,9 @@ struct GameModel {
     // Proyectiles enemigos
     var enemyProjectiles: [Projectile] = []
     
+    // Explosiones
+    var explosions: [Explosion] = []
+    
     // Tiempo desde el último enemigo generado
     var lastEnemySpawnTime: TimeInterval = 0
     
@@ -103,6 +106,35 @@ struct GameModel {
         }
     }
     
+    // Estructura para explosiones
+    struct Explosion: Identifiable {
+        let id = UUID()
+        let position: CGPoint
+        let size: CGFloat
+        var lifetime: TimeInterval = 0
+        let maxLifetime: TimeInterval = 0.5
+        var scale: CGFloat = 0.1
+        var opacity: Double = 1.0
+        var isEnemy: Bool = true // Para diferenciar entre explosiones de enemigos y del jugador
+        
+        // Método para actualizar la explosión
+        mutating func update(deltaTime: TimeInterval) -> Bool {
+            lifetime += deltaTime
+            
+            // Escalar la explosión
+            if lifetime < maxLifetime * 0.3 {
+                // Fase de expansión rápida
+                scale = min(1.0, scale + CGFloat(deltaTime * 5.0))
+            } else {
+                // Fase de desvanecimiento
+                opacity = max(0.0, opacity - Double(deltaTime * 3.0))
+            }
+            
+            // Devolver true si la explosión debe mantenerse, false si debe eliminarse
+            return lifetime < maxLifetime
+        }
+    }
+    
     // Método para verificar si la nave del jugador es impactada por un proyectil enemigo
     func isPlayerHit(playerPosition: CGPoint, playerSize: CGSize, by projectile: Projectile) -> Bool {
         let playerRect = CGRect(
@@ -127,6 +159,7 @@ struct GameModel {
         projectiles.removeAll()
         enemies.removeAll()
         enemyProjectiles.removeAll()
+        explosions.removeAll()
         lastEnemySpawnTime = 0
         lastEnemyShootTime = 0
     }
@@ -140,6 +173,7 @@ struct GameModel {
         projectiles.removeAll()
         enemies.removeAll()
         enemyProjectiles.removeAll()
+        explosions.removeAll()
         lastEnemySpawnTime = 0
         lastEnemyShootTime = 0
         
@@ -158,5 +192,15 @@ struct GameModel {
     // Método para alternar el estado de pausa
     mutating func togglePause() {
         isPaused = !isPaused
+    }
+    
+    // Método para crear una explosión
+    mutating func createExplosion(at position: CGPoint, size: CGFloat, isEnemy: Bool = true) {
+        let explosion = Explosion(
+            position: position,
+            size: size,
+            isEnemy: isEnemy
+        )
+        explosions.append(explosion)
     }
 } 
