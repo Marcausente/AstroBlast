@@ -58,17 +58,17 @@ struct GameView: View {
     
     // Tamaño del joystick basado en el dispositivo
     private var joystickSize: CGFloat {
-        return isIPad ? 160 : 100
+        return isIPad ? 200 : 100
     }
     
     // Tamaño del botón de disparo basado en el dispositivo
     private var shootButtonSize: CGFloat {
-        return isIPad ? 90 : 60
+        return isIPad ? 110 : 60
     }
     
     // Padding para los controles basado en el dispositivo
     private var controlsPadding: CGFloat {
-        return isIPad ? 70 : 50
+        return isIPad ? 80 : 50
     }
     
     var body: some View {
@@ -188,7 +188,7 @@ struct GameView: View {
                             // Joystick (izquierda)
                             JoystickView(direction: $viewModel.joystickDirection)
                                 .frame(width: joystickSize, height: joystickSize)
-                                .padding(.leading, 20)
+                                .padding(.leading, isIPad ? 30 : 20)
                                 .padding(.bottom, controlsPadding)
                             
                             Spacer()
@@ -203,11 +203,11 @@ struct GameView: View {
                                     .overlay(
                                         Image(systemName: "bolt.fill")
                                             .foregroundColor(.white)
-                                            .font(.system(size: isIPad ? 45 : 30))
+                                            .font(.system(size: isIPad ? 55 : 30))
                                     )
                                     .shadow(color: .red.opacity(0.7), radius: 5, x: 0, y: 0)
                             }
-                            .padding(.trailing, 30)
+                            .padding(.trailing, isIPad ? 40 : 30)
                             .padding(.bottom, controlsPadding)
                         }
                     }
