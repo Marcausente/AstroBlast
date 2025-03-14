@@ -50,10 +50,11 @@ struct StarField: View {
 
 struct GameView: View {
     @StateObject private var viewModel = GameViewModel()
+    @State private var showVictoryScreen = false
     
-    // Determinar si estamos en un iPad
+    // Determinar si estamos en iPad
     private var isIPad: Bool {
-        return UIDevice.current.userInterfaceIdiom == .pad
+        UIDevice.current.userInterfaceIdiom == .pad
     }
     
     // Tamaño del joystick basado en el dispositivo
@@ -85,16 +86,28 @@ struct GameView: View {
                     // Puntuación y nivel
                     VStack {
                         HStack {
+                            // Botón de pausa
+                            Button(action: {
+                                viewModel.togglePause()
+                            }) {
+                                Image(systemName: viewModel.gameModel.isPaused ? "play.fill" : "pause.fill")
+                                    .font(.system(size: isIPad ? 30 : 24))
+                                    .foregroundColor(.white)
+                                    .frame(width: isIPad ? 50 : 40, height: isIPad ? 50 : 40)
+                                    .background(Color.blue.opacity(0.7))
+                                    .clipShape(Circle())
+                            }
+                            .padding(.leading, 10)
+                            
                             // Vidas
                             HStack(spacing: 5) {
                                 ForEach(0..<viewModel.gameModel.lives, id: \.self) { _ in
                                     Image(systemName: "heart.fill")
                                         .foregroundColor(.red)
-                                        .font(.system(size: isIPad ? 30 : 20))
+                                        .font(.system(size: isIPad ? 24 : 18))
                                 }
                             }
-                            .padding(.leading, 20)
-                            .padding(.top, 20)
+                            .padding(.leading, 10)
                             
                             Spacer()
                             
@@ -278,6 +291,36 @@ struct GameView: View {
                         }
                         .padding(.top, 30)
                     }
+                }
+                
+                // Pantalla de Pausa
+                if viewModel.gameModel.isPaused && !viewModel.gameModel.isGameOver && !viewModel.gameModel.isLevelCompleted {
+                    VStack(spacing: 20) {
+                        Text("PAUSA")
+                            .font(.system(size: isIPad ? 40 : 32, weight: .bold))
+                            .foregroundColor(.yellow)
+                        
+                        Button("Continuar") {
+                            viewModel.togglePause()
+                        }
+                        .font(.title)
+                        .padding()
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                        
+                        Button("Reiniciar") {
+                            viewModel.restartGame()
+                        }
+                        .font(.title)
+                        .padding()
+                        .background(Color.red)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color.black.opacity(0.8))
+                    .edgesIgnoringSafeArea(.all)
                 }
             }
             .onAppear {

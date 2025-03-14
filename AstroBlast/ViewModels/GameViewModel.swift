@@ -83,7 +83,7 @@ class GameViewModel: ObservableObject {
     }
     
     private func updateGame(deltaTime: TimeInterval) {
-        if gameModel.isGameOver || gameModel.isLevelCompleted {
+        if gameModel.isGameOver || gameModel.isLevelCompleted || gameModel.isPaused {
             return
         }
         
@@ -415,6 +415,11 @@ class GameViewModel: ObservableObject {
     
     // Método para disparar
     func shoot() {
+        // Si el juego está pausado, no permitir disparar
+        if gameModel.isPaused {
+            return
+        }
+        
         // Calculamos la posición Y del proyectil justo encima de la nave
         
         // Calculamos la posición Y de la nave basada en el tamaño de la pantalla
@@ -449,5 +454,10 @@ class GameViewModel: ObservableObject {
     // Método para incrementar la puntuación
     func increaseScore(by points: Int = 10) {
         gameModel.score += points
+    }
+    
+    // Método para alternar el estado de pausa
+    func togglePause() {
+        gameModel.togglePause()
     }
 } 

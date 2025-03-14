@@ -14,6 +14,7 @@ struct GameModel {
     var level: Int = 1
     var isGameOver: Bool = false
     var isLevelCompleted: Bool = false
+    var isPaused: Bool = false
     var lives: Int = 3
     
     // Tiempo de juego
@@ -120,6 +121,7 @@ struct GameModel {
         level = 1
         isGameOver = false
         isLevelCompleted = false
+        isPaused = false
         lives = 3
         elapsedTime = 0
         projectiles.removeAll()
@@ -133,6 +135,7 @@ struct GameModel {
     mutating func advanceToNextLevel() {
         level += 1 // Incrementar el nivel
         isLevelCompleted = false
+        isPaused = false
         elapsedTime = 0
         projectiles.removeAll()
         enemies.removeAll()
@@ -150,5 +153,10 @@ struct GameModel {
         let minutes = Int(timeRemaining) / 60
         let seconds = Int(timeRemaining) % 60
         return String(format: "%02d:%02d", minutes, seconds)
+    }
+    
+    // Método para alternar el estado de pausa
+    mutating func togglePause() {
+        isPaused = !isPaused
     }
 } 
