@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AVFoundation
 
 struct StarField: View {
     let starsCount: Int
@@ -424,11 +425,20 @@ struct GameView: View {
                 }
             }
             .onAppear {
+                print("GameView apareció - Iniciando música del nivel")
                 // Inicializar la posición del jugador en el centro
                 viewModel.movePlayer(to: geometry.size.width / 2)
                 
-                // Forzar orientación vertical
-                OrientationManager.shared.lockOrientation(.portrait)
+                // Detener la música del menú
+                AudioManager.shared.stopBackgroundMusic()
+                
+                // Reproducir la música del nivel
+                AudioManager.shared.playBackgroundMusic(filename: "Sounds/spacemusic.mp3")
+            }
+            .onDisappear {
+                print("GameView desapareció - Volviendo a la música del menú")
+                // Reanudar la música del menú al volver
+                AudioManager.shared.playBackgroundMusic(filename: "Sounds/menumusic.mp3")
             }
             .onDisappear {
                 // Reanudar la música del menú cuando se vuelve al menú principal
@@ -436,6 +446,5 @@ struct GameView: View {
             }
         }
         .statusBar(hidden: true)
-        .lockDeviceOrientation()
     }
 }

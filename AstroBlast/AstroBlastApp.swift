@@ -6,12 +6,26 @@
 //
 
 import SwiftUI
+import AVFoundation
 
 // Clase para manejar la orientación a nivel de aplicación
 class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication, supportedInterfaceOrientationsFor window: UIWindow?) -> UIInterfaceOrientationMask {
-        // Usar la orientación configurada en OrientationManager
-        return OrientationManager.shared.orientation
+        // Forzar orientación vertical para toda la aplicación
+        return .portrait
+    }
+    
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
+        // Configurar la sesión de audio
+        AudioConfig.shared.configureAudioSession()
+        
+        // Verificar archivos de audio
+        AudioConfig.shared.verifyAudioFiles()
+        
+        // Copiar archivos de audio al iniciar la aplicación
+        CopyAudioFiles.copyFilesToBundle()
+        
+        return true
     }
 }
 
@@ -21,14 +35,13 @@ struct AstroBlastApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     
     init() {
-        // Forzar la orientación vertical
-        OrientationManager.shared.lockOrientation(.portrait)
+        // Configurar la sesión de audio al iniciar la aplicación
+        print("Iniciando AstroBlast...")
     }
     
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .lockDeviceOrientation()
         }
     }
 }

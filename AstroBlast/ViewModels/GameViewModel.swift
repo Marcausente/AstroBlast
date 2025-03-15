@@ -8,6 +8,7 @@
 import Foundation
 import SwiftUI
 import Combine
+import AVFoundation
 
 class GameViewModel: ObservableObject {
     @Published var gameModel = GameModel()
@@ -560,6 +561,9 @@ class GameViewModel: ObservableObject {
         if gameModel.isPaused {
             return
         }
+        
+        // Reproducir el sonido de disparo
+        AudioManager.shared.playSoundEffect(filename: "Sounds/Shotsound.mp3")
         
         // Calculamos la posición Y del proyectil justo encima de la nave
         
