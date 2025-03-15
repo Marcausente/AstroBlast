@@ -189,23 +189,51 @@ class GameViewModel: ObservableObject {
     }
     
     private func updateProjectiles() {
-        // Mover los proyectiles del jugador hacia arriba
-        for i in 0..<gameModel.projectiles.count {
-            if i < gameModel.projectiles.count {
-                var projectile = gameModel.projectiles[i]
-                
-                // Mover el proyectil en la dirección establecida
-                projectile.position.x += projectile.direction.dx * playerProjectileSpeed
-                projectile.position.y += projectile.direction.dy * playerProjectileSpeed
-                
-                // Si el proyectil sale de la pantalla, lo eliminamos
-                if projectile.position.y < 0 || 
-                   projectile.position.y > screenHeight ||
-                   projectile.position.x < 0 || 
-                   projectile.position.x > screenWidth {
-                    gameModel.projectiles.remove(at: i)
-                } else {
-                    gameModel.projectiles[i] = projectile
+        // Actualizar proyectiles del jugador
+        for (index, projectile) in gameModel.projectiles.enumerated().reversed() {
+            // Si el proyectil sale de la pantalla, eliminarlo
+            if projectile.position.y < -10 {
+                if index < gameModel.projectiles.count {
+                    gameModel.projectiles.remove(at: index)
+                }
+                continue
+            }
+            
+            // Mover el proyectil
+            var newPosition = projectile.position
+            newPosition.y -= playerProjectileSpeed
+            
+            if index < gameModel.projectiles.count {
+                gameModel.projectiles[index].position = newPosition
+            }
+            
+            // Comprobar colisiones con enemigos
+            for (enemyIndex, enemy) in gameModel.enemies.enumerated().reversed() {
+                if enemy.isHit(by: projectile) {
+                    // Crear una explosión en la posición del enemigo
+                    gameModel.createExplosion(
+                        at: enemy.position,
+                        size: enemy.size.width,
+                        isEnemy: true
+                    )
+                    
+                    // Reproducir el sonido de destrucción
+                    AudioManager.shared.playSoundEffect(filename: "Sounds/Destroysound.mp3")
+                    
+                    // Eliminar el enemigo
+                    if enemyIndex < gameModel.enemies.count {
+                        gameModel.enemies.remove(at: enemyIndex)
+                    }
+                    
+                    // Eliminar el proyectil
+                    if index < gameModel.projectiles.count {
+                        gameModel.projectiles.remove(at: index)
+                    }
+                    
+                    // Incrementar la puntuación
+                    increaseScore()
+                    
+                    break
                 }
             }
         }
