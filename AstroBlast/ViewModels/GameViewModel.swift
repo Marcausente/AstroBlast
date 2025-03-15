@@ -505,6 +505,9 @@ class GameViewModel: ObservableObject {
                     isEnemy: false
                 )
                 
+                // Reproducir un sonido de impacto (no el de destrucción)
+                // Solo reproducimos el sonido de destrucción cuando la nave es destruida completamente
+                
                 // Reducir vidas
                 gameModel.lives -= 1
                 
@@ -516,6 +519,9 @@ class GameViewModel: ObservableObject {
                         size: shipWidth * 1.5,
                         isEnemy: false
                     )
+                    
+                    // Reproducir sonido de destrucción cuando la nave del jugador es completamente destruida
+                    AudioManager.shared.playSoundEffect(filename: "Sounds/Destroysound.mp3")
                     
                     gameModel.isGameOver = true
                 }
@@ -564,6 +570,9 @@ class GameViewModel: ObservableObject {
                         size: shipWidth * 1.5,
                         isEnemy: false
                     )
+                    
+                    // Reproducir sonido de destrucción cuando la nave del jugador es completamente destruida
+                    AudioManager.shared.playSoundEffect(filename: "Sounds/Destroysound.mp3")
                     
                     gameModel.isGameOver = true
                 }

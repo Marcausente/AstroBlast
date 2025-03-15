@@ -15,6 +15,27 @@ class AudioManager {
     private var soundEffectPlayers: [URL: AVAudioPlayer] = [:]
     private var isAudioSessionActive = false
     
+    // Volumen para la música de fondo
+    var musicVolume: Float = 0.5 {
+        didSet {
+            backgroundMusicPlayer?.volume = musicVolume
+        }
+    }
+    
+    // Volumen para los efectos de sonido
+    var soundEffectsVolume: Float = 1.0
+    
+    // Estado de silencio
+    var isMuted: Bool = false {
+        didSet {
+            if isMuted {
+                backgroundMusicPlayer?.volume = 0
+            } else {
+                backgroundMusicPlayer?.volume = musicVolume
+            }
+        }
+    }
+    
     private init() {
         setupAudioSession()
         
@@ -371,5 +392,15 @@ class AudioManager {
         } catch {
             print("❌ Error reproduciendo efecto de sonido: \(error.localizedDescription)")
         }
+    }
+    
+    // Pausar la música de fondo
+    func pauseBackgroundMusic() {
+        backgroundMusicPlayer?.pause()
+    }
+    
+    // Reanudar la música de fondo
+    func resumeBackgroundMusic() {
+        backgroundMusicPlayer?.play()
     }
 } 
