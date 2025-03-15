@@ -369,12 +369,8 @@ struct GameView: View {
             .onAppear {
                 // Inicializar la posición del jugador en el centro
                 viewModel.movePlayer(to: geometry.size.width / 2)
-                
-                // Forzar orientación vertical
-                OrientationManager.shared.lockOrientation(.portrait)
             }
         }
         .statusBar(hidden: true)
-        .lockDeviceOrientation()
     }
 }

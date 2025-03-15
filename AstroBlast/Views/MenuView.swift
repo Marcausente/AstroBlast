@@ -72,9 +72,6 @@ struct MenuView: View {
         }
         .onAppear {
             viewModel.startAnimations()
-            
-            // Forzar orientación vertical
-            OrientationManager.shared.lockOrientation(.portrait)
         }
         .gesture(
             // Gesto secreto para desbloquear todos los niveles (triple tap)
