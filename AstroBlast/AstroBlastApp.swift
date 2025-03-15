@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AVFoundation
 
 // Clase para manejar la orientación a nivel de aplicación
 class AppDelegate: NSObject, UIApplicationDelegate {
@@ -15,8 +16,15 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     }
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
+        // Configurar la sesión de audio
+        AudioConfig.shared.configureAudioSession()
+        
+        // Verificar archivos de audio
+        AudioConfig.shared.verifyAudioFiles()
+        
         // Copiar archivos de audio al iniciar la aplicación
         CopyAudioFiles.copyFilesToBundle()
+        
         return true
     }
 }

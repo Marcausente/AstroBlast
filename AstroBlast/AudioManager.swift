@@ -43,7 +43,7 @@ class AudioManager {
         do {
             // Configurar la sesión de audio para reproducción de música de fondo
             try AVAudioSession.sharedInstance().setCategory(
-                .ambient,
+                .playback,
                 mode: .default,
                 options: [.mixWithOthers, .duckOthers]
             )
@@ -140,7 +140,15 @@ class AudioManager {
             }
         }
         
-        // 4. Buscar en el directorio de documentos
+        // 4. Buscar en el directorio Sounds del bundle
+        if let url = Bundle.main.url(forResource: "Sounds/\(filenameWithoutPath)", withExtension: fileExtension) {
+            print("✅ Archivo encontrado en el directorio Sounds del bundle: \(url.path)")
+            return url
+        } else {
+            print("❌ No se encontró en el directorio Sounds del bundle")
+        }
+        
+        // 5. Buscar en el directorio de documentos
         if let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
             let fileURL = documentsDirectory.appendingPathComponent("Sounds").appendingPathComponent(filenameWithoutPath + (fileExtension.isEmpty ? "" : "." + fileExtension))
             print("🔍 Buscando en documentos: \(fileURL.path)")
@@ -152,7 +160,7 @@ class AudioManager {
             }
         }
         
-        // 5. Buscar en el directorio de la aplicación
+        // 6. Buscar en el directorio de la aplicación
         if let appSupportDirectory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first {
             let fileURL = appSupportDirectory.appendingPathComponent("Sounds").appendingPathComponent(filenameWithoutPath + (fileExtension.isEmpty ? "" : "." + fileExtension))
             print("🔍 Buscando en soporte de aplicación: \(fileURL.path)")
@@ -164,7 +172,7 @@ class AudioManager {
             }
         }
         
-        // 6. Buscar en el directorio de recursos del bundle
+        // 7. Buscar en el directorio de recursos del bundle
         if let resourcesURL = Bundle.main.resourceURL {
             let soundDirURL = resourcesURL.appendingPathComponent("Sounds")
             let fileURL = soundDirURL.appendingPathComponent(filenameWithoutPath + (fileExtension.isEmpty ? "" : "." + fileExtension))
@@ -174,6 +182,18 @@ class AudioManager {
                 return fileURL
             } else {
                 print("❌ No se encontró en el directorio de recursos del bundle")
+            }
+        }
+        
+        // 8. Buscar en el directorio raíz del bundle
+        if let resourcesURL = Bundle.main.resourceURL {
+            let fileURL = resourcesURL.appendingPathComponent(filenameWithoutPath + (fileExtension.isEmpty ? "" : "." + fileExtension))
+            print("🔍 Buscando en raíz del bundle: \(fileURL.path)")
+            if FileManager.default.fileExists(atPath: fileURL.path) {
+                print("✅ Archivo encontrado en la raíz del bundle: \(fileURL.path)")
+                return fileURL
+            } else {
+                print("❌ No se encontró en la raíz del bundle")
             }
         }
         
@@ -213,6 +233,13 @@ class AudioManager {
         if !isAudioSessionActive {
             print("La sesión de audio no estaba activa, configurándola...")
             setupAudioSession()
+        } else {
+            // Reactivar la sesión de audio para asegurar que funcione en dispositivos físicos
+            do {
+                try AVAudioSession.sharedInstance().setActive(true)
+            } catch {
+                print("Error reactivando la sesión de audio: \(error.localizedDescription)")
+            }
         }
         
         guard let url = findAudioFile(filename: filename) else {
@@ -227,24 +254,44 @@ class AudioManager {
             if backgroundMusicPlayer != nil {
                 print("Deteniendo reproductor de música anterior")
                 backgroundMusicPlayer?.stop()
+                backgroundMusicPlayer = nil  // Liberar el reproductor anterior
             }
             
             // Crear un nuevo reproductor
             print("Creando nuevo reproductor para: \(url.path)")
             backgroundMusicPlayer = try AVAudioPlayer(contentsOf: url)
-            backgroundMusicPlayer?.numberOfLoops = -1 // Reproducir en bucle infinito
-            backgroundMusicPlayer?.volume = 0.7 // Volumen a buen nivel
-            backgroundMusicPlayer?.prepareToPlay() // Preparar antes de reproducir
             
-            let success = backgroundMusicPlayer?.play() ?? false
+            // Verificar que el reproductor se creó correctamente
+            guard let player = backgroundMusicPlayer else {
+                print("❌ Error: No se pudo crear el reproductor de audio")
+                return
+            }
+            
+            player.numberOfLoops = -1 // Reproducir en bucle infinito
+            player.volume = 0.7 // Volumen a buen nivel
+            player.prepareToPlay() // Preparar antes de reproducir
+            
+            let success = player.play()
             print("Reproducción de música iniciada: \(success ? "✅ Éxito" : "❌ Fallida")")
             
             if !success {
                 // Intentar reiniciar la sesión de audio y reproducir de nuevo
                 print("Intentando reiniciar la sesión de audio y reproducir de nuevo")
                 setupAudioSession()
-                let retrySuccess = backgroundMusicPlayer?.play() ?? false
+                let retrySuccess = player.play()
                 print("Segundo intento de reproducción: \(retrySuccess ? "✅ Éxito" : "❌ Fallida")")
+                
+                if !retrySuccess {
+                    // Último intento: recrear el reproductor
+                    print("Último intento: recreando el reproductor")
+                    backgroundMusicPlayer = nil
+                    backgroundMusicPlayer = try AVAudioPlayer(contentsOf: url)
+                    backgroundMusicPlayer?.numberOfLoops = -1
+                    backgroundMusicPlayer?.volume = 0.7
+                    backgroundMusicPlayer?.prepareToPlay()
+                    let finalSuccess = backgroundMusicPlayer?.play() ?? false
+                    print("Tercer intento de reproducción: \(finalSuccess ? "✅ Éxito" : "❌ Fallida")")
+                }
             }
         } catch {
             print("❌ Error reproduciendo música de fondo: \(error.localizedDescription)")
@@ -262,29 +309,67 @@ class AudioManager {
     }
     
     func playSoundEffect(filename: String) {
+        print("Intentando reproducir efecto de sonido: \(filename)")
         // Asegurarse de que la sesión de audio esté activa
         if !isAudioSessionActive {
+            print("La sesión de audio no estaba activa, configurándola...")
             setupAudioSession()
+        } else {
+            // Reactivar la sesión de audio para asegurar que funcione en dispositivos físicos
+            do {
+                try AVAudioSession.sharedInstance().setActive(true)
+            } catch {
+                print("Error reactivando la sesión de audio: \(error.localizedDescription)")
+            }
         }
         
         guard let url = findAudioFile(filename: filename) else {
+            print("⚠️ No se pudo encontrar el archivo de sonido: \(filename)")
             return
         }
         
+        print("Archivo de sonido encontrado en: \(url.path)")
+        
         // Reutilizar un reproductor existente o crear uno nuevo
         if let player = soundEffectPlayers[url] {
+            print("Reutilizando reproductor existente para: \(url.path)")
             player.currentTime = 0
-            player.play()
-        } else {
-            do {
-                let player = try AVAudioPlayer(contentsOf: url)
-                player.volume = 1.0
-                player.prepareToPlay() // Preparar antes de reproducir
-                player.play()
-                soundEffectPlayers[url] = player
-            } catch {
-                print("Error reproduciendo efecto de sonido: \(error.localizedDescription)")
+            let success = player.play()
+            print("Reproducción de efecto de sonido: \(success ? "✅ Éxito" : "❌ Fallida")")
+            
+            if !success {
+                // Si falla, intentar recrear el reproductor
+                recreateSoundEffectPlayer(for: url)
             }
+        } else {
+            recreateSoundEffectPlayer(for: url)
+        }
+    }
+    
+    private func recreateSoundEffectPlayer(for url: URL) {
+        print("Creando nuevo reproductor de efectos para: \(url.path)")
+        do {
+            let player = try AVAudioPlayer(contentsOf: url)
+            player.volume = 1.0
+            player.prepareToPlay() // Preparar antes de reproducir
+            let success = player.play()
+            print("Reproducción de efecto de sonido (nuevo): \(success ? "✅ Éxito" : "❌ Fallida")")
+            
+            if success {
+                soundEffectPlayers[url] = player
+            } else {
+                // Último intento: reiniciar la sesión de audio
+                print("Intentando reiniciar la sesión de audio para el efecto de sonido")
+                setupAudioSession()
+                let retrySuccess = player.play()
+                print("Segundo intento de reproducción de efecto: \(retrySuccess ? "✅ Éxito" : "❌ Fallida")")
+                
+                if retrySuccess {
+                    soundEffectPlayers[url] = player
+                }
+            }
+        } catch {
+            print("❌ Error reproduciendo efecto de sonido: \(error.localizedDescription)")
         }
     }
 } 

@@ -11,6 +11,7 @@ import AVFoundation
 struct ContentView: View {
     @State private var showSoundTest = false
     @State private var showDebugMenu = false
+    @State private var showAudioVerifier = false
     
     var body: some View {
         ZStack {
@@ -22,16 +23,30 @@ struct ContentView: View {
                     HStack {
                         Spacer()
                         
-                        Button(action: {
-                            showSoundTest = true
-                        }) {
-                            Image(systemName: "speaker.wave.3.fill")
-                                .font(.system(size: 24))
-                                .foregroundColor(.white)
-                                .padding(12)
-                                .background(Color.blue.opacity(0.8))
-                                .clipShape(Circle())
-                                .shadow(color: .black.opacity(0.3), radius: 5, x: 0, y: 2)
+                        VStack(spacing: 15) {
+                            Button(action: {
+                                showSoundTest = true
+                            }) {
+                                Image(systemName: "speaker.wave.3.fill")
+                                    .font(.system(size: 24))
+                                    .foregroundColor(.white)
+                                    .padding(12)
+                                    .background(Color.blue.opacity(0.8))
+                                    .clipShape(Circle())
+                                    .shadow(color: .black.opacity(0.3), radius: 5, x: 0, y: 2)
+                            }
+                            
+                            Button(action: {
+                                showAudioVerifier = true
+                            }) {
+                                Image(systemName: "waveform.badge.magnifyingglass")
+                                    .font(.system(size: 24))
+                                    .foregroundColor(.white)
+                                    .padding(12)
+                                    .background(Color.green.opacity(0.8))
+                                    .clipShape(Circle())
+                                    .shadow(color: .black.opacity(0.3), radius: 5, x: 0, y: 2)
+                            }
                         }
                         .padding(.trailing, 20)
                         .padding(.top, 50)
@@ -43,6 +58,9 @@ struct ContentView: View {
         }
         .sheet(isPresented: $showSoundTest) {
             SoundTest()
+        }
+        .sheet(isPresented: $showAudioVerifier) {
+            VerifyAudioFiles()
         }
         .onAppear {
             // En un entorno de producción, esto debería estar desactivado
