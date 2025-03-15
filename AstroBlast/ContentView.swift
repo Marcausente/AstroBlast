@@ -6,10 +6,62 @@
 //
 
 import SwiftUI
+import AVFoundation
 
 struct ContentView: View {
+    @State private var showSoundTest = false
+    @State private var showDebugMenu = false
+    
     var body: some View {
-        MenuView()
+        ZStack {
+            MenuView()
+            
+            // Menú de depuración (solo visible en modo desarrollo)
+            if showDebugMenu {
+                VStack {
+                    HStack {
+                        Spacer()
+                        
+                        Button(action: {
+                            showSoundTest = true
+                        }) {
+                            Image(systemName: "speaker.wave.3.fill")
+                                .font(.system(size: 24))
+                                .foregroundColor(.white)
+                                .padding(12)
+                                .background(Color.blue.opacity(0.8))
+                                .clipShape(Circle())
+                                .shadow(color: .black.opacity(0.3), radius: 5, x: 0, y: 2)
+                        }
+                        .padding(.trailing, 20)
+                        .padding(.top, 50)
+                    }
+                    
+                    Spacer()
+                }
+            }
+        }
+        .sheet(isPresented: $showSoundTest) {
+            SoundTest()
+        }
+        .onAppear {
+            // En un entorno de producción, esto debería estar desactivado
+            #if DEBUG
+            showDebugMenu = true
+            #endif
+            
+            // Iniciar la música del menú
+            AudioManager.shared.playBackgroundMusic(filename: "Sounds/menumusic.mp3")
+        }
+        // Gesto secreto para mostrar/ocultar el menú de depuración (triple tap en la esquina superior izquierda)
+        .gesture(
+            TapGesture(count: 3)
+                .onEnded {
+                    withAnimation {
+                        showDebugMenu.toggle()
+                    }
+                }
+        )
     }
 }
 

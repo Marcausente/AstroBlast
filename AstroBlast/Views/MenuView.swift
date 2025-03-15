@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AVFoundation
 
 struct MenuView: View {
     @StateObject private var viewModel = MenuViewModel()
@@ -72,6 +73,9 @@ struct MenuView: View {
         }
         .onAppear {
             viewModel.startAnimations()
+            
+            // Reproducir música de fondo del menú
+            AudioManager.shared.playBackgroundMusic(filename: "Sounds/menumusic.mp3")
         }
         .gesture(
             // Gesto secreto para desbloquear todos los niveles (triple tap)
