@@ -42,6 +42,12 @@ struct GameModel {
     // Tiempo desde el último disparo enemigo
     var lastEnemyShootTime: TimeInterval = 0
     
+    // Último momento en que el jugador disparó
+    var lastShotTime: Date = Date()
+    
+    // Tiempo mínimo entre disparos del jugador (en segundos)
+    var playerShootCooldown: TimeInterval = 0.3
+    
     // Estructura para proyectiles (tanto del jugador como de enemigos)
     struct Projectile: Identifiable {
         let id = UUID()

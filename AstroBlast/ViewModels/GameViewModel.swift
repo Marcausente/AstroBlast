@@ -87,6 +87,7 @@ class GameViewModel: ObservableObject {
             enemySpeed = 2.0
             enemyProjectileSpeed = 5.0
             gameModel.levelDuration = 120 // 2 minutos
+            gameModel.playerShootCooldown = 0.4 // Mayor tiempo entre disparos en nivel inicial
             
         case 2:
             // Nivel 2: Más enemigos y más rápidos
@@ -95,6 +96,7 @@ class GameViewModel: ObservableObject {
             enemySpeed = 2.5
             enemyProjectileSpeed = 5.5
             gameModel.levelDuration = 150 // 2.5 minutos
+            gameModel.playerShootCooldown = 0.35
             
         case 3:
             // Nivel 3: Enemigos más resistentes
@@ -103,6 +105,7 @@ class GameViewModel: ObservableObject {
             enemySpeed = 3.0
             enemyProjectileSpeed = 6.0
             gameModel.levelDuration = 180 // 3 minutos
+            gameModel.playerShootCooldown = 0.3
             
         case 4:
             // Nivel 4: Enemigos disparan con mayor frecuencia
@@ -111,6 +114,7 @@ class GameViewModel: ObservableObject {
             enemySpeed = 3.5
             enemyProjectileSpeed = 6.5
             gameModel.levelDuration = 210 // 3.5 minutos
+            gameModel.playerShootCooldown = 0.25
             
         case 5:
             // Nivel 5: Batalla final
@@ -119,6 +123,7 @@ class GameViewModel: ObservableObject {
             enemySpeed = 4.0
             enemyProjectileSpeed = 7.0
             gameModel.levelDuration = 240 // 4 minutos
+            gameModel.playerShootCooldown = 0.2 // Menor tiempo entre disparos en nivel final
             
         default:
             // Niveles superiores: Dificultad extrema
@@ -127,6 +132,7 @@ class GameViewModel: ObservableObject {
             enemySpeed = min(6.0, 2.0 + (CGFloat(level) * 0.5))
             enemyProjectileSpeed = min(10.0, 5.0 + (CGFloat(level) * 0.5))
             gameModel.levelDuration = min(300, 120 + (Double(level) * 30)) // Máximo 5 minutos
+            gameModel.playerShootCooldown = max(0.15, 0.4 - (Double(level-5) * 0.02)) // Mínimo 0.15 segundos
         }
     }
     
@@ -599,6 +605,15 @@ class GameViewModel: ObservableObject {
         if gameModel.isPaused {
             return
         }
+        
+        // Comprobar si ha pasado suficiente tiempo desde el último disparo
+        let currentTime = Date()
+        if currentTime.timeIntervalSince(gameModel.lastShotTime) < gameModel.playerShootCooldown {
+            return // No ha pasado suficiente tiempo, ignorar este disparo
+        }
+        
+        // Actualizar el tiempo del último disparo
+        gameModel.lastShotTime = currentTime
         
         // Reproducir el sonido de disparo
         AudioManager.shared.playSoundEffect(filename: "Sounds/Shotsound.mp3")
