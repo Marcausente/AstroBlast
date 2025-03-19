@@ -15,7 +15,8 @@ class AudioConfig {
         let requiredAudioFiles = [
             "Sounds/menumusic.mp3",
             "Sounds/spacemusic.mp3",
-            "Sounds/Shotsound.mp3"
+            "Sounds/Shotsound.mp3",
+            "Sounds/Destroysound.mp3"
         ]
         
         // Verificar cada archivo

@@ -330,17 +330,24 @@ class AudioManager {
     }
     
     func playSoundEffect(filename: String) {
-        print("Intentando reproducir efecto de sonido: \(filename)")
+        print("🔊 Intentando reproducir efecto de sonido: \(filename)")
+        
+        // No reproducir sonidos si está silenciado
+        if isMuted {
+            print("🔇 Audio silenciado, no se reproducirá el efecto de sonido")
+            return
+        }
+        
         // Asegurarse de que la sesión de audio esté activa
         if !isAudioSessionActive {
-            print("La sesión de audio no estaba activa, configurándola...")
+            print("🔄 La sesión de audio no estaba activa, configurándola...")
             setupAudioSession()
         } else {
             // Reactivar la sesión de audio para asegurar que funcione en dispositivos físicos
             do {
                 try AVAudioSession.sharedInstance().setActive(true)
             } catch {
-                print("Error reactivando la sesión de audio: \(error.localizedDescription)")
+                print("❌ Error reactivando la sesión de audio: \(error.localizedDescription)")
             }
         }
         
@@ -349,44 +356,51 @@ class AudioManager {
             return
         }
         
-        print("Archivo de sonido encontrado en: \(url.path)")
+        print("✅ Archivo de sonido encontrado en: \(url.path)")
         
         // Reutilizar un reproductor existente o crear uno nuevo
         if let player = soundEffectPlayers[url] {
-            print("Reutilizando reproductor existente para: \(url.path)")
+            print("♻️ Reutilizando reproductor existente para: \(url.path)")
             player.currentTime = 0
+            player.volume = soundEffectsVolume // Asegurarse de que el volumen sea correcto
             let success = player.play()
-            print("Reproducción de efecto de sonido: \(success ? "✅ Éxito" : "❌ Fallida")")
+            print("🎵 Reproducción de efecto de sonido: \(success ? "✅ Éxito" : "❌ Fallida")")
             
             if !success {
+                print("🔄 Reproducción fallida, intentando recrear el reproductor")
                 // Si falla, intentar recrear el reproductor
                 recreateSoundEffectPlayer(for: url)
             }
         } else {
+            print("🆕 Creando nuevo reproductor para: \(url.path)")
             recreateSoundEffectPlayer(for: url)
         }
     }
     
     private func recreateSoundEffectPlayer(for url: URL) {
-        print("Creando nuevo reproductor de efectos para: \(url.path)")
+        print("🔄 Creando nuevo reproductor de efectos para: \(url.path)")
         do {
             let player = try AVAudioPlayer(contentsOf: url)
-            player.volume = 1.0
+            player.volume = soundEffectsVolume
             player.prepareToPlay() // Preparar antes de reproducir
             let success = player.play()
-            print("Reproducción de efecto de sonido (nuevo): \(success ? "✅ Éxito" : "❌ Fallida")")
+            print("🎵 Reproducción de efecto de sonido (nuevo): \(success ? "✅ Éxito" : "❌ Fallida")")
             
             if success {
                 soundEffectPlayers[url] = player
+                print("✅ Reproductor guardado para reutilización")
             } else {
                 // Último intento: reiniciar la sesión de audio
-                print("Intentando reiniciar la sesión de audio para el efecto de sonido")
+                print("🔄 Intentando reiniciar la sesión de audio para el efecto de sonido")
                 setupAudioSession()
                 let retrySuccess = player.play()
-                print("Segundo intento de reproducción de efecto: \(retrySuccess ? "✅ Éxito" : "❌ Fallida")")
+                print("🎵 Segundo intento de reproducción de efecto: \(retrySuccess ? "✅ Éxito" : "❌ Fallida")")
                 
                 if retrySuccess {
                     soundEffectPlayers[url] = player
+                    print("✅ Reproductor guardado para reutilización después del segundo intento")
+                } else {
+                    print("❌ No se pudo reproducir el efecto de sonido después de múltiples intentos")
                 }
             }
         } catch {

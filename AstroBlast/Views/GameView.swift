@@ -8,42 +8,246 @@
 import SwiftUI
 import AVFoundation
 
-struct StarField: View {
-    let starsCount: Int
-    @State private var stars: [Star] = []
+// Fondo de nebulosas espaciales
+struct NebulaBackground: View {
+    let level: Int
+    @State private var nebulas: [Nebula] = []
+    @State private var timer: Timer?
     
-    struct Star: Identifiable {
+    struct Nebula: Identifiable {
         let id = UUID()
-        let x: CGFloat
-        let y: CGFloat
-        let size: CGFloat
+        var position: CGPoint
+        var size: CGSize
+        var rotation: Double
+        let color: Color
         let opacity: Double
-    }
-    
-    init(starsCount: Int = 100) {
-        self.starsCount = starsCount
+        let speed: CGFloat
     }
     
     var body: some View {
         GeometryReader { geometry in
             ZStack {
-                ForEach(stars) { star in
+                // Nebulosas en el fondo
+                ForEach(nebulas) { nebula in
+                    Ellipse()
+                        .fill(
+                            RadialGradient(
+                                gradient: Gradient(colors: [nebula.color, nebula.color.opacity(0)]),
+                                center: .center,
+                                startRadius: 1,
+                                endRadius: nebula.size.width / 2
+                            )
+                        )
+                        .frame(width: nebula.size.width, height: nebula.size.height)
+                        .position(nebula.position)
+                        .rotationEffect(.degrees(nebula.rotation))
+                        .opacity(nebula.opacity)
+                        .blur(radius: 15)
+                }
+            }
+            .onAppear {
+                // Crear nebulosas
+                nebulas = createNebulas(in: geometry)
+                
+                // Crear un timer para animar las nebulosas
+                timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
+                    updateNebulas(in: geometry)
+                }
+            }
+            .onDisappear {
+                timer?.invalidate()
+                timer = nil
+            }
+        }
+    }
+    
+    private func createNebulas(in geometry: GeometryProxy) -> [Nebula] {
+        // Número de nebulosas basado en el tamaño de la pantalla
+        let count = Int(geometry.size.width / 200) + 1
+        
+        // Colores de nebulosa según el nivel
+        let colors: [Color]
+        switch level % 5 {
+        case 0:
+            colors = [Color.blue.opacity(0.3), Color.purple.opacity(0.3)]
+        case 1:
+            colors = [Color.red.opacity(0.2), Color.orange.opacity(0.2)]
+        case 2:
+            colors = [Color.green.opacity(0.2), Color.blue.opacity(0.2)]
+        case 3:
+            colors = [Color.purple.opacity(0.2), Color.pink.opacity(0.2)]
+        default:
+            colors = [Color.orange.opacity(0.2), Color.yellow.opacity(0.2)]
+        }
+        
+        return (0..<count).map { _ in
+            let width = CGFloat.random(in: geometry.size.width * 0.5...geometry.size.width * 1.5)
+            return Nebula(
+                position: CGPoint(
+                    x: CGFloat.random(in: 0...geometry.size.width),
+                    y: CGFloat.random(in: -width/2...geometry.size.height + width/2)
+                ),
+                size: CGSize(
+                    width: width,
+                    height: width * CGFloat.random(in: 0.3...0.7)
+                ),
+                rotation: Double.random(in: 0...360),
+                color: colors.randomElement() ?? .blue.opacity(0.3),
+                opacity: Double.random(in: 0.1...0.3),
+                speed: CGFloat.random(in: 0.1...0.5)
+            )
+        }
+    }
+    
+    private func updateNebulas(in geometry: GeometryProxy) {
+        // Factor de velocidad basado en el nivel (más lento que las estrellas)
+        let levelSpeedFactor = 1.0 + (Double(level) * 0.05)
+        
+        for i in 0..<nebulas.count {
+            // Mover la nebulosa hacia abajo
+            nebulas[i].position.y += nebulas[i].speed * CGFloat(levelSpeedFactor)
+            
+            // Si la nebulosa sale de la pantalla, crear una nueva en la parte superior
+            if nebulas[i].position.y - nebulas[i].size.height/2 > geometry.size.height {
+                let width = CGFloat.random(in: geometry.size.width * 0.5...geometry.size.width * 1.5)
+                nebulas[i].position = CGPoint(
+                    x: CGFloat.random(in: 0...geometry.size.width),
+                    y: -width/2
+                )
+                nebulas[i].size = CGSize(
+                    width: width,
+                    height: width * CGFloat.random(in: 0.3...0.7)
+                )
+                nebulas[i].rotation = Double.random(in: 0...360)
+            }
+        }
+    }
+}
+
+struct StarField: View {
+    let starsCount: Int
+    let level: Int // Nivel actual para ajustar la velocidad
+    @State private var stars: [Star] = []
+    @State private var timer: Timer?
+    
+    struct Star: Identifiable {
+        let id = UUID()
+        var x: CGFloat
+        var y: CGFloat
+        let size: CGFloat
+        let opacity: Double
+        let speed: CGFloat // Velocidad base de movimiento de la estrella
+        let color: Color // Color de la estrella
+    }
+    
+    init(starsCount: Int = 100, level: Int = 1) {
+        self.starsCount = starsCount
+        self.level = level
+    }
+    
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack {
+                // Capa de fondo (estrellas más lentas y pequeñas para dar sensación de profundidad)
+                ForEach(stars.filter { $0.speed < 1.0 }) { star in
                     Circle()
-                        .fill(Color.white)
+                        .fill(star.color)
                         .frame(width: star.size, height: star.size)
                         .position(x: star.x, y: star.y)
                         .opacity(star.opacity)
                 }
+                
+                // Capa intermedia
+                ForEach(stars.filter { $0.speed >= 1.0 && $0.speed < 2.0 }) { star in
+                    Circle()
+                        .fill(star.color)
+                        .frame(width: star.size, height: star.size)
+                        .position(x: star.x, y: star.y)
+                        .opacity(star.opacity)
+                        .blur(radius: 0.2)
+                }
+                
+                // Capa frontal (estrellas más rápidas y grandes)
+                ForEach(stars.filter { $0.speed >= 2.0 }) { star in
+                    ZStack {
+                        // Estrella
+                        Circle()
+                            .fill(star.color)
+                            .frame(width: star.size, height: star.size)
+                            .position(x: star.x, y: star.y)
+                            .opacity(star.opacity)
+                            .blur(radius: 0.3)
+                            .shadow(color: star.color, radius: 1, x: 0, y: 0)
+                        
+                        // Estela de la estrella
+                        Path { path in
+                            path.move(to: CGPoint(x: star.x, y: star.y))
+                            path.addLine(to: CGPoint(x: star.x, y: star.y - star.speed * 2))
+                        }
+                        .stroke(star.color, lineWidth: star.size * 0.7)
+                        .opacity(star.opacity * 0.7)
+                        .blur(radius: 0.8)
+                    }
+                }
             }
             .onAppear {
+                // Crear estrellas iniciales
                 stars = (0..<starsCount).map { _ in
-                    Star(
-                        x: CGFloat.random(in: 0...geometry.size.width),
-                        y: CGFloat.random(in: 0...geometry.size.height),
-                        size: CGFloat.random(in: 1...3),
-                        opacity: Double.random(in: 0.3...1.0)
-                    )
+                    createStar(in: geometry)
                 }
+                
+                // Crear un timer para animar las estrellas
+                timer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { _ in
+                    updateStars(in: geometry)
+                }
+            }
+            .onDisappear {
+                // Detener el timer cuando la vista desaparece
+                timer?.invalidate()
+                timer = nil
+            }
+        }
+    }
+    
+    // Crear una nueva estrella
+    private func createStar(in geometry: GeometryProxy) -> Star {
+        // Determinar el tamaño y la velocidad (relacionados: más grandes = más rápidas)
+        let starSize = CGFloat.random(in: 1...4)
+        let speed = starSize * CGFloat.random(in: 0.3...0.8)
+        
+        // Colores posibles para las estrellas
+        let colors: [Color] = [
+            .white,
+            Color(red: 0.9, green: 0.9, blue: 1.0),  // Blanco azulado
+            Color(red: 1.0, green: 0.9, blue: 0.8),  // Blanco amarillento
+            Color(red: 0.8, green: 0.8, blue: 1.0),  // Azul claro
+            Color(red: 1.0, green: 0.8, blue: 0.8)   // Rojo claro
+        ]
+        
+        return Star(
+            x: CGFloat.random(in: 0...geometry.size.width),
+            y: CGFloat.random(in: 0...geometry.size.height),
+            size: starSize,
+            opacity: Double.random(in: 0.3...1.0),
+            speed: speed,
+            color: colors.randomElement() ?? .white
+        )
+    }
+    
+    // Actualizar la posición de las estrellas
+    private func updateStars(in geometry: GeometryProxy) {
+        // Factor de velocidad basado en el nivel (aumenta gradualmente)
+        let levelSpeedFactor = 1.0 + (Double(level) * 0.1)
+        
+        for i in 0..<stars.count {
+            // Mover la estrella hacia abajo para dar efecto de avance
+            // La velocidad se multiplica por el factor del nivel
+            stars[i].y += stars[i].speed * CGFloat(levelSpeedFactor)
+            
+            // Si la estrella sale de la pantalla, crear una nueva en la parte superior
+            if stars[i].y > geometry.size.height {
+                stars[i].y = 0
+                stars[i].x = CGFloat.random(in: 0...geometry.size.width)
             }
         }
     }
@@ -132,8 +336,11 @@ struct GameView: View {
                 // Fondo negro para el espacio
                 Color.black.edgesIgnoringSafeArea(.all)
                 
+                // Fondo de nebulosas (más lento)
+                NebulaBackground(level: viewModel.gameModel.level)
+                
                 // Campo de estrellas
-                StarField(starsCount: 150)
+                StarField(starsCount: 150, level: viewModel.gameModel.level)
                 
                 // Interfaz de juego
                 if !viewModel.gameModel.isGameOver && !viewModel.gameModel.isLevelCompleted {

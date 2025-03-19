@@ -218,6 +218,7 @@ class GameViewModel: ObservableObject {
                     )
                     
                     // Reproducir el sonido de destrucción
+                    print("💥 Reproduciendo sonido de destrucción para nave enemiga")
                     AudioManager.shared.playSoundEffect(filename: "Sounds/Destroysound.mp3")
                     
                     // Eliminar el enemigo
@@ -602,8 +603,6 @@ class GameViewModel: ObservableObject {
         // Reproducir el sonido de disparo
         AudioManager.shared.playSoundEffect(filename: "Sounds/Shotsound.mp3")
         
-        // Calculamos la posición Y del proyectil justo encima de la nave
-        
         // Calculamos la posición Y de la nave basada en el tamaño de la pantalla
         let shipY = screenHeight * shipYPositionRatio
         
@@ -616,9 +615,6 @@ class GameViewModel: ObservableObject {
             direction: CGVector(dx: 0, dy: -1) // Dirección hacia arriba
         )
         gameModel.projectiles.append(projectile)
-        
-        // Reproducir el sonido de disparo
-        AudioManager.shared.playSoundEffect(filename: "Sounds/Shotsound.mp3")
     }
     
     // Método para obtener la posición Y de la nave
