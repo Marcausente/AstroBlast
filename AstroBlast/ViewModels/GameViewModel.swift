@@ -84,7 +84,7 @@ class GameViewModel: ObservableObject {
             enemyShootInterval = 1.6  // Reducido de 1.8 a 1.6 segundos
             enemySpeed = 1.5
             enemyProjectileSpeed = 3.5
-            gameModel.levelDuration = 15 // Cambiado de 90 a 30 segundos para pruebas
+            gameModel.levelDuration = 75 // Cambiado de 90 a 30 segundos para pruebas
             gameModel.playerShootCooldown = 0.4
             gameModel.isBossLevel = false
             
@@ -97,7 +97,7 @@ class GameViewModel: ObservableObject {
             enemyShootInterval = 1.3  // Reducido de 1.5 a 1.3 segundos
             enemySpeed = 1.8
             enemyProjectileSpeed = 4.0
-            gameModel.levelDuration = 15 // Cambiado de 90 a 30 segundos para pruebas
+            gameModel.levelDuration = 75 // Cambiado de 90 a 30 segundos para pruebas
             gameModel.playerShootCooldown = 0.35
             gameModel.isBossLevel = false
             
@@ -110,7 +110,7 @@ class GameViewModel: ObservableObject {
             enemyShootInterval = 1.0  // Reducido de 1.2 a 1.0 segundos
             enemySpeed = 2.0
             enemyProjectileSpeed = 4.5
-            gameModel.levelDuration = 15 // Cambiado de 90 a 30 segundos para pruebas
+            gameModel.levelDuration = 75 // Cambiado de 90 a 30 segundos para pruebas
             gameModel.playerShootCooldown = 0.3
             gameModel.isBossLevel = false
             
@@ -126,7 +126,7 @@ class GameViewModel: ObservableObject {
             gameModel.isBossLevel = true // Activar el modo boss
             
             // Música del nivel del boss
-            AudioManager.shared.playBackgroundMusic(filename: "Sounds/spacemusic.mp3") // Puedes cambiar esto por una música de boss
+            AudioManager.shared.playBackgroundMusic(filename: "Sounds/bossmusic.mp3") // Música especial para el boss
             
             // Eliminar todos los enemigos existentes y generar el boss
             gameModel.enemies.removeAll()
@@ -802,7 +802,7 @@ class GameViewModel: ObservableObject {
         )
         
         // Configurar las propiedades del boss
-        boss.health = 70 // El boss necesita 70 disparos para ser derrotado (aumentado de 50)
+        boss.health = 85
         boss.size = CGSize(width: 280, height: 280) // Boss más grande
         boss.type = .boss // Establecer el tipo como boss
         

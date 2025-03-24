@@ -20,7 +20,7 @@ struct GameModel {
     
     // Tiempo de juego
     var elapsedTime: TimeInterval = 0
-    var levelDuration: TimeInterval = 15 // Contador del tiempo
+    var levelDuration: TimeInterval = 75 // Contador del tiempo
     
     // Posición del jugador
     var playerPosition: CGFloat = 0 // Posición X de la nave del jugador
