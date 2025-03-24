@@ -119,9 +119,9 @@ class GameViewModel: ObservableObject {
             
         case 4:
             // Nivel 4: Boss final
-            enemyShootInterval = 0.5  // El boss dispara muy rápido
+            enemyShootInterval = 0.8  // Aumentado de 0.5 a 0.8 para dar más tiempo entre ataques
             enemySpeed = 0.3         // El boss se mueve lentamente
-            enemyProjectileSpeed = 5.0 // Proyectiles más rápidos
+            enemyProjectileSpeed = 3.0 // Reducido de 5.0 a 3.0 para proyectiles más lentos
             gameModel.playerShootCooldown = 0.25 // El jugador puede disparar más rápido
             gameModel.isBossLevel = true // Activar el modo boss
             
@@ -802,8 +802,8 @@ class GameViewModel: ObservableObject {
         )
         
         // Configurar las propiedades del boss
-        boss.health = 50 // El boss necesita 50 disparos para ser derrotado
-        boss.size = CGSize(width: 280, height: 280) // Boss más grande (aumentado de 200 a 280)
+        boss.health = 70 // El boss necesita 70 disparos para ser derrotado (aumentado de 50)
+        boss.size = CGSize(width: 280, height: 280) // Boss más grande
         boss.type = .boss // Establecer el tipo como boss
         
         // Añadir el boss al juego
@@ -818,14 +818,14 @@ class GameViewModel: ObservableObject {
     private func bossShoot(deltaTime: TimeInterval) {
         // Actualizar el ciclo de disparo
         bossShootingCycle += deltaTime
-        if bossShootingCycle >= 4.0 { // 4 segundos por ciclo completo (3 de disparos + 1 de pausa)
+        if bossShootingCycle >= 5.0 { // Aumentado de 4.0 a 5.0 segundos (3 de disparos + 2 de pausa)
             bossShootingCycle = 0
         }
         
         // Actualizar el estado de carga del boss
         isBossCharging = bossShootingCycle >= 3.0
         
-        // Solo disparar durante los primeros 3 segundos del ciclo (pausa en el último segundo)
+        // Solo disparar durante los primeros 3 segundos del ciclo (pausa en los últimos 2 segundos)
         if bossShootingCycle < 3.0 {
             gameModel.lastEnemyShootTime += deltaTime
             
@@ -840,8 +840,8 @@ class GameViewModel: ObservableObject {
                 let playerPosition = CGPoint(x: gameModel.playerPosition, y: getShipYPosition())
                 
                 // Diferentes patrones de disparo según el momento del ciclo
-                if bossShootingCycle < 1.0 {
-                    // Patrón 1: Disparo directo (primeros 1 segundo del ciclo)
+                if bossShootingCycle < 0.8 {
+                    // Patrón 1: Disparo directo (primeros 0.8 segundos del ciclo)
                     for i in 0...2 { // 3 disparos cada vez
                         // Calcular posiciones de disparo (izquierda, centro, derecha)
                         let offsetX = CGFloat(i - 1) * (boss.size.width * 0.4)
@@ -865,8 +865,10 @@ class GameViewModel: ObservableObject {
                         
                         gameModel.enemyProjectiles.append(projectile)
                     }
-                } else if bossShootingCycle < 2.0 {
-                    // Patrón 2: Disparo en abanico (segundos 1-2 del ciclo)
+                } else if bossShootingCycle < 1.8 {
+                    // Pausa entre patrones de 0.8 a 1.8
+                } else if bossShootingCycle < 2.6 {
+                    // Patrón 2: Disparo en abanico (segundos 1.8-2.6 del ciclo)
                     for i in 0...4 { // 5 disparos en abanico
                         let baseAngle = -0.4 // Ángulo inicial
                         let angleStep = 0.2 // Incremento entre cada disparo
@@ -892,36 +894,10 @@ class GameViewModel: ObservableObject {
                         
                         gameModel.enemyProjectiles.append(projectile)
                     }
-                } else {
-                    // Patrón 3: Disparo aleatorio (segundos 2-3 del ciclo)
-                    for _ in 0...6 { // 7 disparos aleatorios
-                        let randomOffsetX = CGFloat.random(in: -boss.size.width/2...boss.size.width/2)
-                        let randomOffsetY = CGFloat.random(in: 0...boss.size.height/2)
-                        
-                        let shootPosition = CGPoint(
-                            x: boss.position.x + randomOffsetX,
-                            y: boss.position.y + randomOffsetY
-                        )
-                        
-                        // Dirección aleatoria dentro de un rango hacia abajo
-                        let randomAngle = Double.random(in: -0.5...0.5)
-                        let direction = CGVector(
-                            dx: CGFloat(sin(randomAngle)),
-                            dy: CGFloat(cos(randomAngle))
-                        )
-                        
-                        // Crear proyectil
-                        let projectile = GameModel.Projectile(
-                            position: shootPosition,
-                            isEnemy: true,
-                            direction: direction
-                        )
-                        
-                        gameModel.enemyProjectiles.append(projectile)
-                    }
                 }
+                // No hay tercer patrón, dejando más tiempo de pausa entre ciclos completos
             }
         }
-        // Durante el último segundo del ciclo, el boss no dispara (pausa)
+        // Durante los últimos 2 segundos del ciclo, el boss no dispara (pausa más larga)
     }
 } 
