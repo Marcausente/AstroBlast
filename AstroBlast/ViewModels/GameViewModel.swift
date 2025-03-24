@@ -82,44 +82,44 @@ class GameViewModel: ObservableObject {
         switch level {
         case 1:
             // Nivel 1: Configuración básica
-            enemySpawnInterval = 2.0
-            enemyShootInterval = 1.5
-            enemySpeed = 2.0
+            enemySpawnInterval = 2.0  // Un enemigo cada 2 segundos
+            enemyShootInterval = 1.5  // Disparan cada 1.5 segundos
+            enemySpeed = 2.0          // Velocidad base
             enemyProjectileSpeed = 5.0
             gameModel.levelDuration = 120 // 2 minutos
             gameModel.playerShootCooldown = 0.4 // Mayor tiempo entre disparos en nivel inicial
             
         case 2:
-            // Nivel 2: Más enemigos y más rápidos
-            enemySpawnInterval = 1.5
-            enemyShootInterval = 1.3
-            enemySpeed = 2.5
+            // Nivel 2: Más enemigos y más rápidos, fondo azulado
+            enemySpawnInterval = 1.2  // Más enemigos (cada 1.2 segundos)
+            enemyShootInterval = 1.3  // Disparan un poco más seguido
+            enemySpeed = 2.5          // Se mueven más rápido
             enemyProjectileSpeed = 5.5
             gameModel.levelDuration = 150 // 2.5 minutos
             gameModel.playerShootCooldown = 0.35
             
         case 3:
-            // Nivel 3: Enemigos más resistentes
-            enemySpawnInterval = 1.3
-            enemyShootInterval = 1.2
-            enemySpeed = 3.0
+            // Nivel 3: Enemigos más agresivos, fondo morado
+            enemySpawnInterval = 0.9  // Enemigos aparecen muy seguido
+            enemyShootInterval = 0.8  // Disparan mucho más seguido
+            enemySpeed = 3.0          // Se mueven más rápido
             enemyProjectileSpeed = 6.0
             gameModel.levelDuration = 180 // 3 minutos
             gameModel.playerShootCooldown = 0.3
             
         case 4:
-            // Nivel 4: Enemigos disparan con mayor frecuencia
-            enemySpawnInterval = 1.2
-            enemyShootInterval = 0.8
+            // Nivel 4: Enemigos disparan con mayor frecuencia, fondo rojizo
+            enemySpawnInterval = 0.8
+            enemyShootInterval = 0.6
             enemySpeed = 3.5
             enemyProjectileSpeed = 6.5
             gameModel.levelDuration = 210 // 3.5 minutos
             gameModel.playerShootCooldown = 0.25
             
         case 5:
-            // Nivel 5: Batalla final
-            enemySpawnInterval = 1.0
-            enemyShootInterval = 0.7
+            // Nivel 5: Batalla final, fondo naranja/rojo
+            enemySpawnInterval = 0.7
+            enemyShootInterval = 0.5
             enemySpeed = 4.0
             enemyProjectileSpeed = 7.0
             gameModel.levelDuration = 240 // 4 minutos
@@ -127,9 +127,9 @@ class GameViewModel: ObservableObject {
             
         default:
             // Niveles superiores: Dificultad extrema
-            enemySpawnInterval = max(0.5, 2.0 - (Double(level) * 0.2))
-            enemyShootInterval = max(0.5, 1.5 - (Double(level) * 0.1))
-            enemySpeed = min(6.0, 2.0 + (CGFloat(level) * 0.5))
+            enemySpawnInterval = max(0.4, 1.0 - (Double(level) * 0.1))    // Mínimo 0.4 segundos
+            enemyShootInterval = max(0.3, 1.0 - (Double(level) * 0.1))    // Mínimo 0.3 segundos
+            enemySpeed = min(7.0, 2.0 + (CGFloat(level) * 0.5))          // Máximo velocidad 7
             enemyProjectileSpeed = min(10.0, 5.0 + (CGFloat(level) * 0.5))
             gameModel.levelDuration = min(300, 120 + (Double(level) * 30)) // Máximo 5 minutos
             gameModel.playerShootCooldown = max(0.15, 0.4 - (Double(level-5) * 0.02)) // Mínimo 0.15 segundos

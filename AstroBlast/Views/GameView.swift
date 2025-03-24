@@ -27,6 +27,11 @@ struct NebulaBackground: View {
     var body: some View {
         GeometryReader { geometry in
             ZStack {
+                // Color de fondo basado en el nivel
+                backgroundColorForLevel(level)
+                    .opacity(0.3)
+                    .edgesIgnoringSafeArea(.all)
+                
                 // Nebulosas en el fondo
                 ForEach(nebulas) { nebula in
                     Ellipse()
@@ -61,26 +66,35 @@ struct NebulaBackground: View {
         }
     }
     
+    // Color de fondo según el nivel
+    private func backgroundColorForLevel(_ level: Int) -> Color {
+        switch level {
+        case 1:
+            return Color.black // Nivel 1: Negro espacial
+        case 2:
+            return Color.blue // Nivel 2: Azulado
+        case 3:
+            return Color.purple // Nivel 3: Morado
+        case 4:
+            return Color.red // Nivel 4: Rojizo
+        case 5:
+            return Color.orange // Nivel 5: Naranja (nivel final)
+        default:
+            // Niveles superiores: Colores más intensos
+            let hue = Double(level % 5) / 5.0
+            return Color(hue: hue, saturation: 0.7, brightness: 0.3)
+        }
+    }
+    
     private func createNebulas(in geometry: GeometryProxy) -> [Nebula] {
-        // Número de nebulosas basado en el tamaño de la pantalla
-        let count = Int(geometry.size.width / 200) + 1
+        // Número de nebulosas basado en el nivel
+        let baseCount = Int(geometry.size.width / 200) + 1
+        let nebulaCount = baseCount + min(5, level - 1) // Más nebulosas en niveles superiores
         
         // Colores de nebulosa según el nivel
-        let colors: [Color]
-        switch level % 5 {
-        case 0:
-            colors = [Color.blue.opacity(0.3), Color.purple.opacity(0.3)]
-        case 1:
-            colors = [Color.red.opacity(0.2), Color.orange.opacity(0.2)]
-        case 2:
-            colors = [Color.green.opacity(0.2), Color.blue.opacity(0.2)]
-        case 3:
-            colors = [Color.purple.opacity(0.2), Color.pink.opacity(0.2)]
-        default:
-            colors = [Color.orange.opacity(0.2), Color.yellow.opacity(0.2)]
-        }
+        let colors = nebulaColorsForLevel(level)
         
-        return (0..<count).map { _ in
+        return (0..<nebulaCount).map { _ in
             let width = CGFloat.random(in: geometry.size.width * 0.5...geometry.size.width * 1.5)
             return Nebula(
                 position: CGPoint(
@@ -96,6 +110,31 @@ struct NebulaBackground: View {
                 opacity: Double.random(in: 0.1...0.3),
                 speed: CGFloat.random(in: 0.1...0.5)
             )
+        }
+    }
+    
+    // Colores de nebulosa según el nivel
+    private func nebulaColorsForLevel(_ level: Int) -> [Color] {
+        switch level {
+        case 1:
+            return [Color.blue.opacity(0.3), Color.purple.opacity(0.3)]
+        case 2:
+            return [Color.blue.opacity(0.4), Color.cyan.opacity(0.4), Color.teal.opacity(0.3)]
+        case 3:
+            return [Color.purple.opacity(0.5), Color.indigo.opacity(0.4), Color.pink.opacity(0.3)]
+        case 4:
+            return [Color.red.opacity(0.4), Color.pink.opacity(0.3), Color.orange.opacity(0.3)]
+        case 5:
+            return [Color.orange.opacity(0.5), Color.yellow.opacity(0.4), Color.red.opacity(0.3)]
+        default:
+            // Niveles superiores: Colores más intensos y variados
+            return [
+                Color.red.opacity(0.5),
+                Color.blue.opacity(0.5),
+                Color.purple.opacity(0.5),
+                Color.orange.opacity(0.5),
+                Color.green.opacity(0.4)
+            ]
         }
     }
     
