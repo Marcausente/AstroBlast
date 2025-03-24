@@ -10,7 +10,7 @@ import Foundation
 struct MenuModel {
     // Opciones del menú principal
     enum MenuOption: Int, CaseIterable, Identifiable {
-        case levels = 0
+        case play = 0
         case options
         case credits
         case exit
@@ -21,8 +21,8 @@ struct MenuModel {
         
         var title: String {
             switch self {
-            case .levels:
-                return "Niveles"
+            case .play:
+                return "Jugar"
             case .options:
                 return "Opciones"
             case .credits:
@@ -34,7 +34,7 @@ struct MenuModel {
         
         var iconName: String {
             switch self {
-            case .levels:
+            case .play:
                 return "gamecontroller.fill"
             case .options:
                 return "gearshape.fill"
@@ -46,7 +46,7 @@ struct MenuModel {
         }
     }
     
-    // Niveles disponibles
+    // Niveles disponibles (se mantiene para compatibilidad)
     enum GameLevel: Int, CaseIterable, Identifiable {
         case level1 = 1
         case level2 = 2
@@ -60,27 +60,6 @@ struct MenuModel {
         
         var title: String {
             return "Nivel \(self.rawValue)"
-        }
-        
-        var isLocked: Bool {
-            // Por defecto, solo el nivel 1 está desbloqueado
-            // En una implementación real, esto podría verificar el progreso del jugador
-            return self.rawValue > 1
-        }
-        
-        var description: String {
-            switch self {
-            case .level1:
-                return "Misión de entrenamiento. Sobrevive durante 2 minutos."
-            case .level2:
-                return "Aumenta la dificultad. Más enemigos y más rápidos."
-            case .level3:
-                return "Aparecen enemigos especiales con más resistencia."
-            case .level4:
-                return "Los enemigos disparan con mayor frecuencia."
-            case .level5:
-                return "Batalla final. Enfréntate al jefe alienígena."
-            }
         }
     }
     
@@ -120,7 +99,6 @@ struct MenuModel {
     // Estados posibles del menú
     enum MenuState {
         case main
-        case levels
         case options
         case credits
     }
@@ -138,6 +116,6 @@ struct MenuModel {
     // Método para iniciar el juego en un nivel específico
     func startGame(level: GameLevel) -> Bool {
         // En una implementación real, aquí verificaríamos si el nivel está desbloqueado
-        return !level.isLocked
+        return true
     }
 } 

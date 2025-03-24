@@ -12,7 +12,6 @@ import Combine
 class MenuViewModel: ObservableObject {
     @Published var menuModel = MenuModel()
     @Published var showGameView = false
-    @Published var selectedLevel: MenuModel.GameLevel = .level1
     @Published var showExitConfirmation = false
     
     // Efectos visuales
@@ -61,21 +60,14 @@ class MenuViewModel: ObservableObject {
         menuModel.backToMain()
     }
     
-    // Método para iniciar el juego en un nivel específico
+    // Método para iniciar el juego en el nivel 1
     func startGame(level: MenuModel.GameLevel) {
-        if menuModel.startGame(level: level) {
-            selectedLevel = level
-            
-            // Pausar la música del menú antes de iniciar el juego
-            if menuModel.options.musicEnabled {
-                AudioManager.shared.pauseBackgroundMusic()
-            }
-            
-            showGameView = true
-        } else {
-            // El nivel está bloqueado, podríamos mostrar un mensaje
-            print("Nivel bloqueado")
+        // Pausar la música del menú antes de iniciar el juego
+        if menuModel.options.musicEnabled {
+            AudioManager.shared.pauseBackgroundMusic()
         }
+        
+        showGameView = true
     }
     
     // Método para desbloquear todos los niveles (para propósitos de demostración)
