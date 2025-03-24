@@ -144,7 +144,7 @@ class GameViewModel: ObservableObject {
     private func startGameLoop() {
         lastUpdateTime = Date().timeIntervalSince1970
         
-        timer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { [weak self] _ in
+        timer = Timer.scheduledTimer(withTimeInterval: 0.016, repeats: true) { [weak self] _ in
             guard let self = self else { return }
             
             let currentTime = Date().timeIntervalSince1970
@@ -153,6 +153,9 @@ class GameViewModel: ObservableObject {
             
             self.updateGame(deltaTime: deltaTime)
         }
+        
+        // Asegurarnos que el timer se ejecute en el modo común de ejecución
+        RunLoop.current.add(timer!, forMode: .common)
     }
     
     private func updateGame(deltaTime: TimeInterval) {
@@ -250,7 +253,9 @@ class GameViewModel: ObservableObject {
     }
     
     private func updateEnemies(deltaTime: TimeInterval) {
-        // Primero, establecer el objetivo Y para cada enemigo si no lo tiene
+        // Procesamiento por lotes para mejor rendimiento
+        
+        // Paso 1: Establecer objetivos si no existen
         for i in 0..<gameModel.enemies.count {
             if i < gameModel.enemies.count && gameModel.enemies[i].targetY == nil {
                 var enemy = gameModel.enemies[i]
@@ -259,35 +264,27 @@ class GameViewModel: ObservableObject {
             }
         }
         
-        // Mover los enemigos hacia abajo hasta la mitad de la pantalla
+        // Paso 2: Crear un mapa de posiciones para consulta rápida
+        var positionMap: [CGPoint: Bool] = [:]
+        for enemy in gameModel.enemies {
+            let gridX = Int(enemy.position.x / 60) // Tamaño de la cuadrícula
+            let gridY = Int(enemy.position.y / 60)
+            positionMap[CGPoint(x: gridX, y: gridY)] = true
+        }
+        
+        // Paso 3: Actualizar movimiento de enemigos
         for i in 0..<gameModel.enemies.count {
             if i < gameModel.enemies.count {
                 var enemy = gameModel.enemies[i]
                 
                 // Solo mover el enemigo si está en movimiento
                 if enemy.isMoving {
-                    // Verificar si hay algún enemigo debajo que impida el movimiento
-                    var shouldStop = false
+                    let gridX = Int(enemy.position.x / 60)
+                    let gridY = Int(enemy.position.y / 60)
                     
-                    for otherEnemy in gameModel.enemies {
-                        // No comparar con sí mismo
-                        if otherEnemy.id != enemy.id {
-                            // Si el otro enemigo está debajo y en la misma columna aproximadamente
-                            if otherEnemy.position.y > enemy.position.y && 
-                               abs(otherEnemy.position.x - enemy.position.x) < enemy.size.width * 0.8 {
-                                // Calcular la distancia vertical
-                                let verticalDistance = otherEnemy.position.y - enemy.position.y
-                                
-                                // Si está demasiado cerca, detener el movimiento
-                                if verticalDistance < minEnemyDistance {
-                                    shouldStop = true
-                                    break
-                                }
-                            }
-                        }
-                    }
+                    // Verificar obstáculos abajo (método simplificado)
+                    let shouldStop = positionMap[CGPoint(x: gridX, y: gridY + 1)] == true
                     
-                    // Si no hay obstáculos, mover hacia abajo hasta la posición objetivo
                     if !shouldStop {
                         // Mover el enemigo hacia abajo
                         enemy.position.y += enemySpeed
@@ -302,23 +299,12 @@ class GameViewModel: ObservableObject {
                         enemy.isMoving = false
                     }
                 } else {
-                    // Si el enemigo está detenido, verificar si puede moverse de nuevo
-                    var canMove = true
+                    // Verificar si puede moverse nuevamente
+                    let gridX = Int(enemy.position.x / 60)
+                    let gridY = Int(enemy.position.y / 60)
                     
-                    for otherEnemy in gameModel.enemies {
-                        if otherEnemy.id != enemy.id {
-                            // Si hay un enemigo debajo y está demasiado cerca
-                            if otherEnemy.position.y > enemy.position.y && 
-                               abs(otherEnemy.position.x - enemy.position.x) < enemy.size.width * 0.8 {
-                                let verticalDistance = otherEnemy.position.y - enemy.position.y
-                                
-                                if verticalDistance < minEnemyDistance {
-                                    canMove = false
-                                    break
-                                }
-                            }
-                        }
-                    }
+                    // Verificar obstáculos abajo (método simplificado)
+                    let canMove = positionMap[CGPoint(x: gridX, y: gridY + 1)] != true
                     
                     // Si puede moverse y no ha llegado a su objetivo, reanudar movimiento
                     if canMove && enemy.position.y < enemy.targetY! {
@@ -383,6 +369,12 @@ class GameViewModel: ObservableObject {
         // Generar un nuevo enemigo cada cierto tiempo
         if gameModel.lastEnemySpawnTime >= enemySpawnInterval {
             gameModel.lastEnemySpawnTime = 0
+            
+            // Limitar el número máximo de enemigos para evitar sobrecarga
+            let maxEnemies = 10 + (gameModel.level * 3)
+            if gameModel.enemies.count >= maxEnemies {
+                return
+            }
             
             // Posición aleatoria en X
             let randomX = CGFloat.random(in: 50...(screenWidth - 50))
@@ -505,8 +497,23 @@ class GameViewModel: ObservableObject {
     }
     
     private func checkCollisions() {
+        // Cache de las posiciones para evitar recálculos
+        let playerPosition = CGPoint(x: gameModel.playerPosition, y: getShipYPosition())
+        let playerSize = CGSize(width: shipWidth, height: shipHeight)
+        let playerRect = CGRect(
+            x: playerPosition.x - playerSize.width/2,
+            y: playerPosition.y - playerSize.height/2,
+            width: playerSize.width,
+            height: playerSize.height
+        )
+        
         // Verificar colisiones entre proyectiles del jugador y enemigos
         for (projectileIndex, projectile) in gameModel.projectiles.enumerated().reversed() {
+            // Optimización: Si el proyectil está fuera del área de enemigos, saltar
+            if projectile.position.y < 0 {
+                continue
+            }
+            
             for (enemyIndex, enemy) in gameModel.enemies.enumerated().reversed() {
                 if enemy.isHit(by: projectile) {
                     // Eliminar el proyectil
@@ -526,6 +533,9 @@ class GameViewModel: ObservableObject {
                                 size: enemy.size.width,
                                 isEnemy: true
                             )
+                            
+                            // Reproducir el sonido de destrucción
+                            AudioManager.shared.playSoundEffect(filename: "Sounds/Destroysound.mp3")
                             
                             // Eliminar el enemigo
                             gameModel.enemies.remove(at: enemyIndex)
@@ -548,11 +558,8 @@ class GameViewModel: ObservableObject {
         }
         
         // Verificar colisiones entre proyectiles enemigos y el jugador
-        let playerPosition = CGPoint(x: gameModel.playerPosition, y: getShipYPosition())
-        let playerSize = CGSize(width: shipWidth, height: shipHeight)
-        
         for (projectileIndex, projectile) in gameModel.enemyProjectiles.enumerated().reversed() {
-            if gameModel.isPlayerHit(playerPosition: playerPosition, playerSize: playerSize, by: projectile) {
+            if playerRect.contains(projectile.position) {
                 // Eliminar el proyectil
                 if projectileIndex < gameModel.enemyProjectiles.count {
                     gameModel.enemyProjectiles.remove(at: projectileIndex)
@@ -564,9 +571,6 @@ class GameViewModel: ObservableObject {
                     size: 30,
                     isEnemy: false
                 )
-                
-                // Reproducir un sonido de impacto (no el de destrucción)
-                // Solo reproducimos el sonido de destrucción cuando la nave es destruida completamente
                 
                 // Reducir vidas
                 gameModel.lives -= 1
@@ -597,13 +601,6 @@ class GameViewModel: ObservableObject {
                 y: enemy.position.y - enemy.size.height/2,
                 width: enemy.size.width,
                 height: enemy.size.height
-            )
-            
-            let playerRect = CGRect(
-                x: playerPosition.x - playerSize.width/2,
-                y: playerPosition.y - playerSize.height/2,
-                width: playerSize.width,
-                height: playerSize.height
             )
             
             if enemyRect.intersects(playerRect) {

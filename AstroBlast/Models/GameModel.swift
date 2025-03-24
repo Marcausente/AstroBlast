@@ -202,6 +202,12 @@ struct GameModel {
     
     // Método para crear una explosión
     mutating func createExplosion(at position: CGPoint, size: CGFloat, isEnemy: Bool = true) {
+        // Limitar el número de explosiones simultáneas para mejorar rendimiento
+        if explosions.count >= 10 {
+            // Eliminar la explosión más antigua
+            explosions.removeFirst()
+        }
+        
         let explosion = Explosion(
             position: position,
             size: size,

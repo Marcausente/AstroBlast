@@ -7,6 +7,7 @@
 
 import SwiftUI
 import AVFoundation
+// No es necesario importar OptimizedExplosionView como módulo ya que es una vista definida dentro del proyecto
 
 // Fondo de nebulosas espaciales
 struct NebulaBackground: View {
@@ -55,8 +56,8 @@ struct NebulaBackground: View {
                 nebulas = createNebulas(in: geometry)
                 
                 // Crear un timer para animar las nebulosas
-                timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
-                    updateNebulas(in: geometry)
+                timer = Timer.scheduledTimer(withTimeInterval: 0.16, repeats: true) { _ in
+                    self.updateNebulas(in: geometry)
                 }
             }
             .onDisappear {
@@ -87,9 +88,9 @@ struct NebulaBackground: View {
     }
     
     private func createNebulas(in geometry: GeometryProxy) -> [Nebula] {
-        // Número de nebulosas basado en el nivel
-        let baseCount = Int(geometry.size.width / 200) + 1
-        let nebulaCount = baseCount + min(5, level - 1) // Más nebulosas en niveles superiores
+        // Número reducido de nebulosas para mejorar rendimiento
+        let baseCount = Int(geometry.size.width / 300) + 1
+        let nebulaCount = baseCount + min(3, level - 1) // Menos nebulosas, máximo 3 adicionales
         
         // Colores de nebulosa según el nivel
         let colors = nebulaColorsForLevel(level)
@@ -236,8 +237,8 @@ struct StarField: View {
                 }
                 
                 // Crear un timer para animar las estrellas
-                timer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { _ in
-                    updateStars(in: geometry)
+                timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
+                    self.updateStars(in: geometry)
                 }
             }
             .onDisappear {
@@ -340,57 +341,13 @@ struct StarField: View {
     }
 }
 
-// Vista para la explosión
-struct ExplosionView: View {
-    let explosion: GameModel.Explosion
-    
-    var body: some View {
-        ZStack {
-            // Núcleo de la explosión
-            Circle()
-                .fill(explosion.isEnemy ? Color.orange : Color.red)
-                .frame(width: explosion.size * explosion.scale, height: explosion.size * explosion.scale)
-                .opacity(explosion.opacity)
-            
-            // Ondas de la explosión
-            ForEach(0..<3) { i in
-                Circle()
-                    .stroke(
-                        explosion.isEnemy ? 
-                            Color.orange.opacity(0.7 - Double(i) * 0.2) : 
-                            Color.red.opacity(0.7 - Double(i) * 0.2),
-                        lineWidth: 3 - CGFloat(i)
-                    )
-                    .frame(
-                        width: explosion.size * explosion.scale * (1.0 + CGFloat(i) * 0.2),
-                        height: explosion.size * explosion.scale * (1.0 + CGFloat(i) * 0.2)
-                    )
-                    .opacity(explosion.opacity * (1.0 - Double(i) * 0.2))
-            }
-            
-            // Partículas de la explosión
-            ForEach(0..<8) { i in
-                let angle = Double(i) * .pi / 4.0
-                let distance = explosion.size * explosion.scale * 0.6
-                
-                Circle()
-                    .fill(explosion.isEnemy ? Color.yellow : Color.red)
-                    .frame(width: 4, height: 4)
-                    .position(
-                        x: cos(angle) * distance,
-                        y: sin(angle) * distance
-                    )
-                    .opacity(explosion.opacity * 0.8)
-            }
-        }
-        .position(explosion.position)
-    }
-}
-
 struct GameView: View {
     @StateObject private var viewModel: GameViewModel
     @State private var showVictoryScreen = false
     @Environment(\.presentationMode) var presentationMode
+    
+    // Modo de bajo consumo para mejorar rendimiento
+    @State private var lowPowerMode: Bool = false
     
     // Determinar si estamos en iPad
     private var isIPad: Bool {
@@ -423,11 +380,25 @@ struct GameView: View {
                 // Fondo negro para el espacio
                 Color.black.edgesIgnoringSafeArea(.all)
                 
-                // Fondo de nebulosas (más lento)
-                NebulaBackground(level: viewModel.gameModel.level)
-                
-                // Campo de estrellas
-                StarField(starsCount: 150, level: viewModel.gameModel.level)
+                // Efectos visuales sólo si no estamos en modo de bajo consumo
+                if !lowPowerMode {
+                    // Fondo de nebulosas (más lento)
+                    NebulaBackground(level: viewModel.gameModel.level)
+                    
+                    // Campo de estrellas (número reducido para mejorar rendimiento)
+                    StarField(starsCount: 80, level: viewModel.gameModel.level)
+                } else {
+                    // Fondo simplificado para modo de bajo consumo
+                    LinearGradient(
+                        colors: [
+                            backgroundColorForLevel(viewModel.gameModel.level).opacity(0.5),
+                            Color.black
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .edgesIgnoringSafeArea(.all)
+                }
                 
                 // Interfaz de juego
                 if !viewModel.gameModel.isGameOver && !viewModel.gameModel.isLevelCompleted {
@@ -717,8 +688,37 @@ struct GameView: View {
                     .background(Color.black.opacity(0.8))
                     .edgesIgnoringSafeArea(.all)
                 }
+                
+                // Botón para alternar el modo de bajo consumo (en la esquina)
+                VStack {
+                    HStack {
+                        Spacer()
+                        
+                        Button(action: {
+                            withAnimation {
+                                lowPowerMode.toggle()
+                            }
+                        }) {
+                            Image(systemName: lowPowerMode ? "bolt.slash.fill" : "bolt.fill")
+                                .font(.system(size: 14))
+                                .foregroundColor(.white)
+                                .padding(8)
+                                .background(lowPowerMode ? Color.red.opacity(0.7) : Color.green.opacity(0.7))
+                                .clipShape(Circle())
+                        }
+                        .padding(10)
+                    }
+                    
+                    Spacer()
+                }
             }
             .onAppear {
+                // Detectar automáticamente si se necesita el modo de bajo consumo
+                // En dispositivos más antiguos activamos el modo automáticamente
+                if UIDevice.current.systemVersion.compare("15.0", options: .numeric) == .orderedAscending {
+                    lowPowerMode = true
+                }
+                
                 print("GameView apareció - Iniciando música del nivel")
                 // Inicializar la posición del jugador en el centro
                 viewModel.movePlayer(to: geometry.size.width / 2)
@@ -740,5 +740,24 @@ struct GameView: View {
             }
         }
         .statusBar(hidden: true)
+    }
+    
+    // Función para determinar el color de fondo según el nivel
+    private func backgroundColorForLevel(_ level: Int) -> Color {
+        switch level {
+        case 1:
+            return Color.black
+        case 2:
+            return Color.blue
+        case 3:
+            return Color.purple
+        case 4:
+            return Color.red
+        case 5:
+            return Color.orange
+        default:
+            let hue = Double(level % 5) / 5.0
+            return Color(hue: hue, saturation: 0.7, brightness: 0.3)
+        }
     }
 }
