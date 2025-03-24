@@ -51,12 +51,16 @@ struct MenuModel {
         case level1 = 1
         case level2 = 2
         case level3 = 3
+        case level4 = 4 // Nivel de boss
         
         var id: Int {
             return self.rawValue
         }
         
         var title: String {
+            if self.rawValue == 4 {
+                return "Nivel Boss"
+            }
             return "Nivel \(self.rawValue)"
         }
     }

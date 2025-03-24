@@ -449,11 +449,19 @@ struct GameView: View {
                         // Contador de tiempo
                         HStack {
                             Spacer()
-                            Text("Tiempo: \(viewModel.gameModel.formatTimeRemaining())")
-                                .font(.headline)
-                                .foregroundColor(.white)
-                                .padding(.top, 10)
-                                .padding(.trailing, 20)
+                            if !viewModel.gameModel.isBossLevel {
+                                Text("Tiempo: \(viewModel.gameModel.formatTimeRemaining())")
+                                    .font(.headline)
+                                    .foregroundColor(.white)
+                                    .padding(.top, 10)
+                                    .padding(.trailing, 20)
+                            } else {
+                                Text("NIVEL BOSS")
+                                    .font(.headline)
+                                    .foregroundColor(.red)
+                                    .padding(.top, 10)
+                                    .padding(.trailing, 20)
+                            }
                         }
                         
                         Spacer()
@@ -461,14 +469,18 @@ struct GameView: View {
                     
                     // Enemigos
                     ForEach(viewModel.gameModel.enemies) { enemy in
-                        if viewModel.gameModel.level == 3 && enemy.health > 1 {
-                            Image("bigenemy")
+                        if enemy.type == .boss {
+                            // Para el boss, aplicamos efectos visuales especiales
+                            Image("Boss")
                                 .resizable()
                                 .scaledToFit()
                                 .frame(width: enemy.size.width, height: enemy.size.height)
                                 .position(enemy.position)
+                                .opacity(viewModel.isBossCharging ? 0.7 : 1.0) // Parpadeo cuando carga
+                                .colorMultiply(viewModel.isBossCharging ? Color.blue : Color.white) // Efecto de carga azul
                         } else {
-                            Image("Enemigo")
+                            // Para enemigos normales
+                            Image(enemy.type == .big ? "bigenemy" : "Enemigo")
                                 .resizable()
                                 .scaledToFit()
                                 .frame(width: enemy.size.width, height: enemy.size.height)
@@ -491,12 +503,13 @@ struct GameView: View {
                         ZStack {
                             // Círculo principal
                             Circle()
-                                .fill(Color.red)
-                                .frame(width: 8, height: 8)
+                                .fill(viewModel.gameModel.isBossLevel ? Color.purple : Color.red)
+                                .frame(width: viewModel.gameModel.isBossLevel ? 12 : 8, 
+                                       height: viewModel.gameModel.isBossLevel ? 12 : 8)
                             
                             // Estela del proyectil
                             Path { path in
-                                let length: CGFloat = 12
+                                let length: CGFloat = viewModel.gameModel.isBossLevel ? 18 : 12
                                 
                                 // Punto inicial (centro del círculo)
                                 path.move(to: CGPoint(x: 0, y: 0))
@@ -507,11 +520,14 @@ struct GameView: View {
                                     y: -projectile.direction.dy * length
                                 ))
                             }
-                            .stroke(Color.red.opacity(0.7), lineWidth: 3)
-                            .blur(radius: 2)
+                            .stroke(viewModel.gameModel.isBossLevel ? Color.purple.opacity(0.7) : Color.red.opacity(0.7), 
+                                    lineWidth: viewModel.gameModel.isBossLevel ? 5 : 3)
+                            .blur(radius: viewModel.gameModel.isBossLevel ? 3 : 2)
                         }
                         .position(projectile.position)
-                        .shadow(color: .red, radius: 3, x: 0, y: 0)
+                        .shadow(color: viewModel.gameModel.isBossLevel ? .purple : .red, 
+                                radius: viewModel.gameModel.isBossLevel ? 5 : 3, 
+                                x: 0, y: 0)
                     }
                     
                     // Explosiones
@@ -565,46 +581,80 @@ struct GameView: View {
                             .foregroundColor(.green)
                             .padding()
                         
-                        Text("Has acabado el nivel \(viewModel.gameModel.level)")
-                            .font(.title)
-                            .foregroundColor(.white)
-                            .padding()
-                        
-                        Text("¡Sobreviviste durante 1:30 minutos!")
-                            .font(.title2)
-                            .foregroundColor(.white)
-                            .padding(.bottom, 10)
-                        
-                        Text("Puntuación: \(viewModel.gameModel.score)")
-                            .font(.title2)
-                            .foregroundColor(.white)
-                            .padding()
-                        
-                        HStack(spacing: 20) {
+                        if viewModel.gameModel.level == 4 {
+                            // Victoria del juego completo (derrotamos al boss)
+                            Text("¡Has derrotado al jefe final!")
+                                .font(.title)
+                                .foregroundColor(.white)
+                                .padding()
+                            
+                            Text("¡Has completado AstroBlast!")
+                                .font(.title2)
+                                .foregroundColor(.white)
+                                .padding(.bottom, 10)
+                            
+                            Text("Puntuación final: \(viewModel.gameModel.score)")
+                                .font(.title2)
+                                .foregroundColor(.white)
+                                .padding()
+                            
                             Button(action: {
                                 // Volver al menú
                                 presentationMode.wrappedValue.dismiss()
                             }) {
-                                Text("Menú Principal")
+                                Text("Volver al Menú Principal")
                                     .font(.headline)
                                     .foregroundColor(.white)
                                     .padding()
                                     .background(Color.blue)
                                     .cornerRadius(10)
                             }
+                            .padding(.top, 30)
+                        } else {
+                            // Victoria de nivel normal
+                            Text("Has acabado el nivel \(viewModel.gameModel.level)")
+                                .font(.title)
+                                .foregroundColor(.white)
+                                .padding()
                             
-                            Button(action: {
-                                viewModel.advanceToNextLevel()
-                            }) {
-                                Text("Siguiente Nivel")
-                                    .font(.headline)
+                            if !viewModel.gameModel.isBossLevel {
+                                Text("¡Sobreviviste durante \(viewModel.gameModel.formatTimeRemaining())!")
+                                    .font(.title2)
                                     .foregroundColor(.white)
-                                    .padding()
-                                    .background(Color.green)
-                                    .cornerRadius(10)
+                                    .padding(.bottom, 10)
                             }
+                            
+                            Text("Puntuación: \(viewModel.gameModel.score)")
+                                .font(.title2)
+                                .foregroundColor(.white)
+                                .padding()
+                            
+                            HStack(spacing: 20) {
+                                Button(action: {
+                                    // Volver al menú
+                                    presentationMode.wrappedValue.dismiss()
+                                }) {
+                                    Text("Menú Principal")
+                                        .font(.headline)
+                                        .foregroundColor(.white)
+                                        .padding()
+                                        .background(Color.blue)
+                                        .cornerRadius(10)
+                                }
+                                
+                                Button(action: {
+                                    viewModel.advanceToNextLevel()
+                                }) {
+                                    Text("Siguiente Nivel")
+                                        .font(.headline)
+                                        .foregroundColor(.white)
+                                        .padding()
+                                        .background(Color.green)
+                                        .cornerRadius(10)
+                                }
+                            }
+                            .padding(.top, 30)
                         }
-                        .padding(.top, 30)
                     }
                 } else {
                     // Pantalla de Game Over

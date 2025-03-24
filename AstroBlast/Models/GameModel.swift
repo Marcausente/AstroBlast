@@ -16,10 +16,11 @@ struct GameModel {
     var isLevelCompleted: Bool = false
     var isPaused: Bool = false
     var lives: Int = 3
+    var isBossLevel: Bool = false // Indica si estamos en un nivel de jefe
     
     // Tiempo de juego
     var elapsedTime: TimeInterval = 0
-    var levelDuration: TimeInterval = 90 // 1:30 minutos en segundos
+    var levelDuration: TimeInterval = 15 // Contador del tiempo
     
     // Posición del jugador
     var playerPosition: CGFloat = 0 // Posición X de la nave del jugador
@@ -79,6 +80,13 @@ struct GameModel {
         var lastShootTime: TimeInterval = 0
         var isMoving: Bool = true // Indica si el enemigo está en movimiento
         var targetY: CGFloat? = nil // Posición Y objetivo (mitad de la pantalla)
+        var type: EnemyType = .normal // Tipo de enemigo
+        
+        enum EnemyType {
+            case normal
+            case big
+            case boss
+        }
         
         // Método para verificar colisión con un proyectil
         func isHit(by projectile: Projectile) -> Bool {

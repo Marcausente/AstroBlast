@@ -12,6 +12,7 @@ import AVFoundation
 
 class GameViewModel: ObservableObject {
     @Published var gameModel = GameModel()
+    @Published var isBossCharging: Bool = false // Indica si el boss está en fase de carga/pausa
     private var timer: Timer?
     private var lastUpdateTime: TimeInterval = 0
     
@@ -48,6 +49,9 @@ class GameViewModel: ObservableObject {
     // Distancia mínima entre enemigos
     private let minEnemyDistance: CGFloat = 70
     
+    // Dirección de movimiento del boss
+    private var bossMovingRight = true
+    
     // Inicializador que acepta un nivel
     init(level: Int = 1) {
         // Configurar el nivel inicial
@@ -80,8 +84,9 @@ class GameViewModel: ObservableObject {
             enemyShootInterval = 1.6  // Reducido de 1.8 a 1.6 segundos
             enemySpeed = 1.5
             enemyProjectileSpeed = 3.5
-            gameModel.levelDuration = 90 // 1:30 minutos
+            gameModel.levelDuration = 15 // Cambiado de 90 a 30 segundos para pruebas
             gameModel.playerShootCooldown = 0.4
+            gameModel.isBossLevel = false
             
             // Música del nivel 1
             AudioManager.shared.playBackgroundMusic(filename: "Sounds/spacemusic.mp3")
@@ -92,8 +97,9 @@ class GameViewModel: ObservableObject {
             enemyShootInterval = 1.3  // Reducido de 1.5 a 1.3 segundos
             enemySpeed = 1.8
             enemyProjectileSpeed = 4.0
-            gameModel.levelDuration = 90 // 1:30 minutos
+            gameModel.levelDuration = 15 // Cambiado de 90 a 30 segundos para pruebas
             gameModel.playerShootCooldown = 0.35
+            gameModel.isBossLevel = false
             
             // Música del nivel 2
             AudioManager.shared.playBackgroundMusic(filename: "Sounds/Bowser's Galaxy Generator - Super Mario Galaxy 2.mp3")
@@ -104,14 +110,30 @@ class GameViewModel: ObservableObject {
             enemyShootInterval = 1.0  // Reducido de 1.2 a 1.0 segundos
             enemySpeed = 2.0
             enemyProjectileSpeed = 4.5
-            gameModel.levelDuration = 90 // 1:30 minutos
+            gameModel.levelDuration = 15 // Cambiado de 90 a 30 segundos para pruebas
             gameModel.playerShootCooldown = 0.3
+            gameModel.isBossLevel = false
             
             // Música del nivel 3
             AudioManager.shared.playBackgroundMusic(filename: "Sounds/Melty Monster Galaxy - Super Mario Galaxy 2.mp3")
             
+        case 4:
+            // Nivel 4: Boss final
+            enemyShootInterval = 0.5  // El boss dispara muy rápido
+            enemySpeed = 0.3         // El boss se mueve lentamente
+            enemyProjectileSpeed = 5.0 // Proyectiles más rápidos
+            gameModel.playerShootCooldown = 0.25 // El jugador puede disparar más rápido
+            gameModel.isBossLevel = true // Activar el modo boss
+            
+            // Música del nivel del boss
+            AudioManager.shared.playBackgroundMusic(filename: "Sounds/spacemusic.mp3") // Puedes cambiar esto por una música de boss
+            
+            // Eliminar todos los enemigos existentes y generar el boss
+            gameModel.enemies.removeAll()
+            spawnBoss()
+            
         default:
-            // Si por alguna razón se intenta acceder a un nivel superior al 3,
+            // Si por alguna razón se intenta acceder a un nivel superior al 4,
             // se reinicia al nivel 1
             configureForLevel(1)
         }
@@ -155,8 +177,8 @@ class GameViewModel: ObservableObject {
         // Actualizar el tiempo transcurrido
         gameModel.elapsedTime += deltaTime
         
-        // Comprobar si se ha completado el nivel
-        if gameModel.elapsedTime >= gameModel.levelDuration {
+        // Comprobar si se ha completado el nivel (solo para niveles normales, no para el boss)
+        if !gameModel.isBossLevel && gameModel.elapsedTime >= gameModel.levelDuration {
             gameModel.isLevelCompleted = true
             return
         }
@@ -167,8 +189,19 @@ class GameViewModel: ObservableObject {
         updateEnemyProjectiles()
         updateExplosions(deltaTime: deltaTime)
         checkCollisions()
-        spawnEnemies(deltaTime: deltaTime)
-        enemyShoot(deltaTime: deltaTime)
+        
+        // Solo generar enemigos y disparos enemigos si no estamos en nivel de jefe
+        // o si todavía hay enemigos en el nivel de jefe
+        if !gameModel.isBossLevel {
+            spawnEnemies(deltaTime: deltaTime)
+            enemyShoot(deltaTime: deltaTime)
+        } else if !gameModel.enemies.isEmpty {
+            // Si estamos en nivel de jefe, usar un patrón de disparo especial
+            bossShoot(deltaTime: deltaTime)
+        } else {
+            // Si no hay enemigos en el nivel de jefe, significa que el boss ha sido derrotado
+            gameModel.isLevelCompleted = true
+        }
     }
     
     private func updateShipPosition() {
@@ -260,6 +293,12 @@ class GameViewModel: ObservableObject {
             if i < gameModel.enemies.count {
                 var enemy = gameModel.enemies[i]
                 
+                // Comportamiento especial para el boss
+                if enemy.type == .boss {
+                    updateBossMovement(deltaTime: deltaTime, bossIndex: i)
+                    continue
+                }
+                
                 // Solo mover el enemigo si está en movimiento
                 if enemy.isMoving {
                     let gridX = Int(enemy.position.x / 60)
@@ -302,6 +341,44 @@ class GameViewModel: ObservableObject {
                     gameModel.enemies[i] = enemy
                 }
             }
+        }
+    }
+    
+    // Método para actualizar el movimiento del boss
+    private func updateBossMovement(deltaTime: TimeInterval, bossIndex: Int) {
+        if bossIndex < gameModel.enemies.count {
+            var boss = gameModel.enemies[bossIndex]
+            
+            // Si el boss aún está descendiendo a su posición inicial
+            if boss.isMoving {
+                boss.position.y += enemySpeed
+                
+                if let targetY = boss.targetY, boss.position.y >= targetY {
+                    boss.position.y = targetY // Ajustar a la posición exacta
+                    boss.isMoving = false // Detener el descenso
+                }
+            } else {
+                // Movimiento lateral del boss
+                let moveSpeed: CGFloat = 2.0
+                
+                if bossMovingRight {
+                    boss.position.x += moveSpeed
+                    
+                    // Cambiar dirección si llega al borde derecho
+                    if boss.position.x > screenWidth - boss.size.width/2 {
+                        bossMovingRight = false
+                    }
+                } else {
+                    boss.position.x -= moveSpeed
+                    
+                    // Cambiar dirección si llega al borde izquierdo
+                    if boss.position.x < boss.size.width/2 {
+                        bossMovingRight = true
+                    }
+                }
+            }
+            
+            gameModel.enemies[bossIndex] = boss
         }
     }
     
@@ -378,30 +455,34 @@ class GameViewModel: ObservableObject {
                 // Personalización de enemigos según el nivel
                 var enemySize = CGSize(width: 60, height: 60)
                 var enemyHealth = 1
+                var enemyType: GameModel.Enemy.EnemyType = .normal
                 
                 switch gameModel.level {
                 case 1:
                     // Nivel 1: Enemigos básicos
                     enemyHealth = 1
                     enemySize = CGSize(width: 60, height: 60)
+                    enemyType = .normal
                     
                 case 2:
                     // Nivel 2: Enemigos básicos
                     enemyHealth = 1
                     enemySize = CGSize(width: 60, height: 60)
+                    enemyType = .normal
                     
                 case 3:
-                    // Nivel 3: Mezcla de enemigos con diferentes niveles de vida
+                    // Nivel 3: Dos tipos de enemigos
                     let roll = Int.random(in: 1...10)
-                    if roll <= 4 {
+                    if roll <= 6 {
+                        // 60% de probabilidad para enemigos normales
                         enemyHealth = 1
                         enemySize = CGSize(width: 60, height: 60)
-                    } else if roll <= 8 {
-                        enemyHealth = 2
-                        enemySize = CGSize(width: 65, height: 65)
+                        enemyType = .normal
                     } else {
-                        enemyHealth = 3
+                        // 40% de probabilidad para enemigos grandes
+                        enemyHealth = 2
                         enemySize = CGSize(width: 70, height: 70)
+                        enemyType = .big
                     }
                     
                 default:
@@ -409,6 +490,7 @@ class GameViewModel: ObservableObject {
                     // se usa la configuración del nivel 1
                     enemyHealth = 1
                     enemySize = CGSize(width: 60, height: 60)
+                    enemyType = .normal
                 }
                 
                 // Crear un nuevo enemigo en la parte superior de la pantalla
@@ -418,9 +500,10 @@ class GameViewModel: ObservableObject {
                     targetY: enemyTargetY
                 )
                 
-                // Configurar salud y tamaño
+                // Configurar salud, tamaño y tipo
                 enemy.health = enemyHealth
                 enemy.size = enemySize
+                enemy.type = enemyType
                 
                 gameModel.enemies.append(enemy)
             }
@@ -478,8 +561,8 @@ class GameViewModel: ObservableObject {
                 continue
             }
             
-            for (enemyIndex, enemy) in gameModel.enemies.enumerated().reversed() {
-                if enemy.isHit(by: projectile) {
+            for (enemyIndex, currentEnemy) in gameModel.enemies.enumerated().reversed() {
+                if currentEnemy.isHit(by: projectile) {
                     // Eliminar el proyectil
                     if projectileIndex < gameModel.projectiles.count {
                         gameModel.projectiles.remove(at: projectileIndex)
@@ -487,14 +570,14 @@ class GameViewModel: ObservableObject {
                     
                     // Reducir la salud del enemigo o eliminarlo
                     if enemyIndex < gameModel.enemies.count {
-                        var updatedEnemy = enemy
+                        var updatedEnemy = currentEnemy
                         updatedEnemy.health -= 1
                         
                         if updatedEnemy.health <= 0 {
                             // Crear una explosión en la posición del enemigo
                             createExplosion(
-                                at: enemy.position,
-                                size: enemy.size.width,
+                                at: currentEnemy.position,
+                                size: currentEnemy.size.width,
                                 isEnemy: true
                             )
                             
@@ -507,11 +590,12 @@ class GameViewModel: ObservableObject {
                             // Incrementar la puntuación (más puntos para enemigos más difíciles)
                             let basePoints = 10
                             let levelMultiplier = max(1, gameModel.level)
-                            let healthMultiplier = enemy.health > 1 ? 2 : 1
+                            let healthMultiplier = currentEnemy.type == .big ? 2 : 1
                             
                             gameModel.score += basePoints * levelMultiplier * healthMultiplier
                         } else {
-                            // Actualizar el enemigo con la salud reducida
+                            // Actualizar el enemigo con la salud reducida pero manteniendo su tipo
+                            updatedEnemy.type = currentEnemy.type // Mantener el tipo original
                             gameModel.enemies[enemyIndex] = updatedEnemy
                         }
                     }
@@ -562,19 +646,19 @@ class GameViewModel: ObservableObject {
         }
         
         // Verificar colisiones entre enemigos y el jugador
-        for (enemyIndex, enemy) in gameModel.enemies.enumerated().reversed() {
+        for (enemyIndex, currentEnemy) in gameModel.enemies.enumerated().reversed() {
             let enemyRect = CGRect(
-                x: enemy.position.x - enemy.size.width/2,
-                y: enemy.position.y - enemy.size.height/2,
-                width: enemy.size.width,
-                height: enemy.size.height
+                x: currentEnemy.position.x - currentEnemy.size.width/2,
+                y: currentEnemy.position.y - currentEnemy.size.height/2,
+                width: currentEnemy.size.width,
+                height: currentEnemy.size.height
             )
             
             if enemyRect.intersects(playerRect) {
                 // Crear una explosión en la posición del enemigo
                 createExplosion(
-                    at: enemy.position,
-                    size: enemy.size.width,
+                    at: currentEnemy.position,
+                    size: currentEnemy.size.width,
                     isEnemy: true
                 )
                 
@@ -667,6 +751,13 @@ class GameViewModel: ObservableObject {
     // Método para avanzar al siguiente nivel
     func advanceToNextLevel() {
         let nextLevel = gameModel.level + 1
+        
+        // Si ya completamos el nivel 4 (boss), volvemos al nivel 1
+        if gameModel.level == 4 {
+            // En este caso, solo regresamos al menú (la vista GameView se encargará de mostrar el botón)
+            return
+        }
+        
         gameModel.advanceToNextLevel()
         gameModel.lives = 3 // Restablecer las vidas a 3
         configureForLevel(nextLevel) // Configurar para el nuevo nivel
@@ -699,5 +790,138 @@ class GameViewModel: ObservableObject {
         
         // Reproducir el sonido de explosión
         AudioManager.shared.playSoundEffect(filename: "Sounds/Destroysound.mp3")
+    }
+    
+    // Método para generar el boss
+    private func spawnBoss() {
+        // Crear el boss en el centro de la pantalla
+        var boss = GameModel.Enemy(
+            position: CGPoint(x: screenWidth / 2, y: 150),
+            isMoving: true,
+            targetY: screenHeight * 0.3 // El boss se detiene más arriba
+        )
+        
+        // Configurar las propiedades del boss
+        boss.health = 50 // El boss necesita 50 disparos para ser derrotado
+        boss.size = CGSize(width: 280, height: 280) // Boss más grande (aumentado de 200 a 280)
+        boss.type = .boss // Establecer el tipo como boss
+        
+        // Añadir el boss al juego
+        gameModel.enemies.append(boss)
+    }
+    
+    // Variable para controlar el ciclo de disparo del boss
+    private var bossShootingCycle: TimeInterval = 0
+    private let bossShootingPeriod: TimeInterval = 3.0 // 3 segundos de disparos, 1 segundo de pausa
+    
+    // Método para el patrón de disparo del boss
+    private func bossShoot(deltaTime: TimeInterval) {
+        // Actualizar el ciclo de disparo
+        bossShootingCycle += deltaTime
+        if bossShootingCycle >= 4.0 { // 4 segundos por ciclo completo (3 de disparos + 1 de pausa)
+            bossShootingCycle = 0
+        }
+        
+        // Actualizar el estado de carga del boss
+        isBossCharging = bossShootingCycle >= 3.0
+        
+        // Solo disparar durante los primeros 3 segundos del ciclo (pausa en el último segundo)
+        if bossShootingCycle < 3.0 {
+            gameModel.lastEnemyShootTime += deltaTime
+            
+            // El boss dispara más frecuentemente
+            if gameModel.lastEnemyShootTime >= enemyShootInterval && !gameModel.enemies.isEmpty {
+                gameModel.lastEnemyShootTime = 0
+                
+                // Obtener el boss (primer enemigo)
+                let boss = gameModel.enemies[0]
+                
+                // Posición del jugador
+                let playerPosition = CGPoint(x: gameModel.playerPosition, y: getShipYPosition())
+                
+                // Diferentes patrones de disparo según el momento del ciclo
+                if bossShootingCycle < 1.0 {
+                    // Patrón 1: Disparo directo (primeros 1 segundo del ciclo)
+                    for i in 0...2 { // 3 disparos cada vez
+                        // Calcular posiciones de disparo (izquierda, centro, derecha)
+                        let offsetX = CGFloat(i - 1) * (boss.size.width * 0.4)
+                        let shootPosition = CGPoint(
+                            x: boss.position.x + offsetX,
+                            y: boss.position.y + boss.size.height * 0.4
+                        )
+                        
+                        // Dirección directa hacia el jugador
+                        let direction = GameModel.Projectile.directionToTarget(
+                            from: shootPosition,
+                            to: playerPosition
+                        )
+                        
+                        // Crear proyectil
+                        let projectile = GameModel.Projectile(
+                            position: shootPosition,
+                            isEnemy: true,
+                            direction: direction
+                        )
+                        
+                        gameModel.enemyProjectiles.append(projectile)
+                    }
+                } else if bossShootingCycle < 2.0 {
+                    // Patrón 2: Disparo en abanico (segundos 1-2 del ciclo)
+                    for i in 0...4 { // 5 disparos en abanico
+                        let baseAngle = -0.4 // Ángulo inicial
+                        let angleStep = 0.2 // Incremento entre cada disparo
+                        let angle = baseAngle + (Double(i) * angleStep)
+                        
+                        let shootPosition = CGPoint(
+                            x: boss.position.x,
+                            y: boss.position.y + boss.size.height * 0.4
+                        )
+                        
+                        // Crear dirección basada en el ángulo
+                        let direction = CGVector(
+                            dx: CGFloat(sin(angle)),
+                            dy: CGFloat(cos(angle))
+                        )
+                        
+                        // Crear proyectil
+                        let projectile = GameModel.Projectile(
+                            position: shootPosition,
+                            isEnemy: true,
+                            direction: direction
+                        )
+                        
+                        gameModel.enemyProjectiles.append(projectile)
+                    }
+                } else {
+                    // Patrón 3: Disparo aleatorio (segundos 2-3 del ciclo)
+                    for _ in 0...6 { // 7 disparos aleatorios
+                        let randomOffsetX = CGFloat.random(in: -boss.size.width/2...boss.size.width/2)
+                        let randomOffsetY = CGFloat.random(in: 0...boss.size.height/2)
+                        
+                        let shootPosition = CGPoint(
+                            x: boss.position.x + randomOffsetX,
+                            y: boss.position.y + randomOffsetY
+                        )
+                        
+                        // Dirección aleatoria dentro de un rango hacia abajo
+                        let randomAngle = Double.random(in: -0.5...0.5)
+                        let direction = CGVector(
+                            dx: CGFloat(sin(randomAngle)),
+                            dy: CGFloat(cos(randomAngle))
+                        )
+                        
+                        // Crear proyectil
+                        let projectile = GameModel.Projectile(
+                            position: shootPosition,
+                            isEnemy: true,
+                            direction: direction
+                        )
+                        
+                        gameModel.enemyProjectiles.append(projectile)
+                    }
+                }
+            }
+        }
+        // Durante el último segundo del ciclo, el boss no dispara (pausa)
     }
 } 
