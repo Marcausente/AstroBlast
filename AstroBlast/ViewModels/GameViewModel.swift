@@ -668,6 +668,7 @@ class GameViewModel: ObservableObject {
     func advanceToNextLevel() {
         let nextLevel = gameModel.level + 1
         gameModel.advanceToNextLevel()
+        gameModel.lives = 3 // Restablecer las vidas a 3
         configureForLevel(nextLevel) // Configurar para el nuevo nivel
     }
     
