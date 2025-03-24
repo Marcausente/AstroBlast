@@ -254,14 +254,8 @@ struct StarField: View {
         let starSize = CGFloat.random(in: 1...4)
         let speed = starSize * CGFloat.random(in: 0.3...0.8)
         
-        // Colores posibles para las estrellas
-        let colors: [Color] = [
-            .white,
-            Color(red: 0.9, green: 0.9, blue: 1.0),  // Blanco azulado
-            Color(red: 1.0, green: 0.9, blue: 0.8),  // Blanco amarillento
-            Color(red: 0.8, green: 0.8, blue: 1.0),  // Azul claro
-            Color(red: 1.0, green: 0.8, blue: 0.8)   // Rojo claro
-        ]
+        // Colores posibles para las estrellas según el nivel
+        let colors = starColorsForLevel(level)
         
         return Star(
             x: CGFloat.random(in: 0...geometry.size.width),
@@ -271,6 +265,60 @@ struct StarField: View {
             speed: speed,
             color: colors.randomElement() ?? .white
         )
+    }
+    
+    // Colores de estrellas según el nivel
+    private func starColorsForLevel(_ level: Int) -> [Color] {
+        switch level {
+        case 1:
+            // Nivel 1: Estrellas blancas y azuladas
+            return [
+                .white,
+                Color(red: 0.9, green: 0.9, blue: 1.0),  // Blanco azulado
+                Color(red: 0.8, green: 0.8, blue: 1.0),  // Azul claro
+            ]
+        case 2:
+            // Nivel 2: Estrellas azules
+            return [
+                .white,
+                Color(red: 0.8, green: 0.9, blue: 1.0),  // Blanco azulado
+                Color(red: 0.7, green: 0.8, blue: 1.0),  // Azul claro
+                Color(red: 0.6, green: 0.7, blue: 1.0),  // Azul medio
+            ]
+        case 3:
+            // Nivel 3: Estrellas moradas y rosadas
+            return [
+                .white,
+                Color(red: 0.9, green: 0.8, blue: 1.0),  // Blanco violeta
+                Color(red: 0.8, green: 0.7, blue: 1.0),  // Lila
+                Color(red: 1.0, green: 0.7, blue: 0.9),  // Rosa
+            ]
+        case 4:
+            // Nivel 4: Estrellas rojizas
+            return [
+                .white,
+                Color(red: 1.0, green: 0.9, blue: 0.9),  // Blanco rojizo
+                Color(red: 1.0, green: 0.8, blue: 0.8),  // Rosa claro
+                Color(red: 1.0, green: 0.7, blue: 0.7),  // Rojo claro
+            ]
+        case 5:
+            // Nivel 5: Estrellas naranja y amarillas
+            return [
+                .white,
+                Color(red: 1.0, green: 0.9, blue: 0.7),  // Blanco amarillento
+                Color(red: 1.0, green: 0.8, blue: 0.6),  // Naranja claro
+                Color(red: 1.0, green: 1.0, blue: 0.7),  // Amarillo
+            ]
+        default:
+            // Niveles superiores: Mezcla de colores
+            return [
+                .white,
+                Color(red: 0.9, green: 0.9, blue: 1.0),  // Blanco azulado
+                Color(red: 1.0, green: 0.9, blue: 0.7),  // Blanco amarillento
+                Color(red: 0.9, green: 0.8, blue: 1.0),  // Blanco violeta
+                Color(red: 1.0, green: 0.8, blue: 0.8),  // Rosa claro
+            ]
+        }
     }
     
     // Actualizar la posición de las estrellas
@@ -543,7 +591,7 @@ struct GameView: View {
                             .foregroundColor(.white)
                             .padding()
                         
-                        Text("¡Sobreviviste durante 2 minutos!")
+                        Text("¡Sobreviviste durante 1:30 minutos!")
                             .font(.title2)
                             .foregroundColor(.white)
                             .padding(.bottom, 10)

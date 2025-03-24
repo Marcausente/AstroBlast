@@ -86,7 +86,7 @@ class GameViewModel: ObservableObject {
             enemyShootInterval = 1.5  // Disparan cada 1.5 segundos
             enemySpeed = 2.0          // Velocidad base
             enemyProjectileSpeed = 5.0
-            gameModel.levelDuration = 120 // 2 minutos
+            gameModel.levelDuration = 90 // 1:30 minutos
             gameModel.playerShootCooldown = 0.4 // Mayor tiempo entre disparos en nivel inicial
             
         case 2:
@@ -95,7 +95,7 @@ class GameViewModel: ObservableObject {
             enemyShootInterval = 1.3  // Disparan un poco más seguido
             enemySpeed = 2.5          // Se mueven más rápido
             enemyProjectileSpeed = 5.5
-            gameModel.levelDuration = 150 // 2.5 minutos
+            gameModel.levelDuration = 90 // 1:30 minutos
             gameModel.playerShootCooldown = 0.35
             
         case 3:
@@ -104,7 +104,7 @@ class GameViewModel: ObservableObject {
             enemyShootInterval = 0.8  // Disparan mucho más seguido
             enemySpeed = 3.0          // Se mueven más rápido
             enemyProjectileSpeed = 6.0
-            gameModel.levelDuration = 180 // 3 minutos
+            gameModel.levelDuration = 90 // 1:30 minutos
             gameModel.playerShootCooldown = 0.3
             
         case 4:
@@ -113,7 +113,7 @@ class GameViewModel: ObservableObject {
             enemyShootInterval = 0.6
             enemySpeed = 3.5
             enemyProjectileSpeed = 6.5
-            gameModel.levelDuration = 210 // 3.5 minutos
+            gameModel.levelDuration = 90 // 1:30 minutos
             gameModel.playerShootCooldown = 0.25
             
         case 5:
@@ -122,7 +122,7 @@ class GameViewModel: ObservableObject {
             enemyShootInterval = 0.5
             enemySpeed = 4.0
             enemyProjectileSpeed = 7.0
-            gameModel.levelDuration = 240 // 4 minutos
+            gameModel.levelDuration = 90 // 1:30 minutos
             gameModel.playerShootCooldown = 0.2 // Menor tiempo entre disparos en nivel final
             
         default:
@@ -131,7 +131,7 @@ class GameViewModel: ObservableObject {
             enemyShootInterval = max(0.3, 1.0 - (Double(level) * 0.1))    // Mínimo 0.3 segundos
             enemySpeed = min(7.0, 2.0 + (CGFloat(level) * 0.5))          // Máximo velocidad 7
             enemyProjectileSpeed = min(10.0, 5.0 + (CGFloat(level) * 0.5))
-            gameModel.levelDuration = min(300, 120 + (Double(level) * 30)) // Máximo 5 minutos
+            gameModel.levelDuration = 90 // 1:30 minutos
             gameModel.playerShootCooldown = max(0.15, 0.4 - (Double(level-5) * 0.02)) // Mínimo 0.15 segundos
         }
     }
@@ -400,6 +400,61 @@ class GameViewModel: ObservableObject {
             
             // Solo generar si hay espacio
             if canSpawn {
+                // Personalización de enemigos según el nivel
+                var enemySize = CGSize(width: 60, height: 60)
+                var enemyHealth = 1
+                
+                switch gameModel.level {
+                case 1:
+                    // Nivel 1: Enemigos básicos
+                    enemyHealth = 1
+                    enemySize = CGSize(width: 60, height: 60)
+                    
+                case 2:
+                    // Nivel 2: Mezcla de enemigos normales y ocasionalmente más resistentes
+                    if Int.random(in: 1...10) <= 3 {
+                        enemyHealth = 2
+                        enemySize = CGSize(width: 65, height: 65)
+                    }
+                    
+                case 3:
+                    // Nivel 3: Más probabilidad de enemigos resistentes
+                    if Int.random(in: 1...10) <= 5 {
+                        enemyHealth = 2
+                        enemySize = CGSize(width: 65, height: 65)
+                    }
+                    // Y algunos muy resistentes
+                    if Int.random(in: 1...15) <= 2 {
+                        enemyHealth = 3
+                        enemySize = CGSize(width: 70, height: 70)
+                    }
+                    
+                case 4, 5:
+                    // Niveles 4 y 5: Alta probabilidad de enemigos resistentes
+                    let roll = Int.random(in: 1...10)
+                    if roll <= 6 {
+                        enemyHealth = 2
+                        enemySize = CGSize(width: 65, height: 65)
+                    } else if roll <= 9 {
+                        enemyHealth = 3
+                        enemySize = CGSize(width: 70, height: 70)
+                    }
+                    
+                default:
+                    // Niveles superiores: Enemigos muy resistentes
+                    let roll = Int.random(in: 1...10)
+                    if roll <= 4 {
+                        enemyHealth = 2
+                        enemySize = CGSize(width: 65, height: 65)
+                    } else if roll <= 8 {
+                        enemyHealth = 3
+                        enemySize = CGSize(width: 70, height: 70)
+                    } else {
+                        enemyHealth = 4
+                        enemySize = CGSize(width: 75, height: 75)
+                    }
+                }
+                
                 // Crear un nuevo enemigo en la parte superior de la pantalla
                 var enemy = GameModel.Enemy(
                     position: CGPoint(x: randomX, y: 50),
@@ -407,11 +462,9 @@ class GameViewModel: ObservableObject {
                     targetY: enemyTargetY
                 )
                 
-                // En niveles superiores, algunos enemigos tienen más salud
-                if gameModel.level >= 3 && Int.random(in: 1...10) <= 3 {
-                    enemy.health = 2
-                    enemy.size = CGSize(width: 70, height: 70) // Enemigos más grandes
-                }
+                // Configurar salud y tamaño
+                enemy.health = enemyHealth
+                enemy.size = enemySize
                 
                 gameModel.enemies.append(enemy)
             }
