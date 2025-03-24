@@ -64,17 +64,11 @@ class GameViewModel: ObservableObject {
         
         // Registrar para notificaciones de cambio de orientación
         NotificationCenter.default.addObserver(self, selector: #selector(updateScreenDimensions), name: UIDevice.orientationDidChangeNotification, object: nil)
-        
-        // Iniciar la música del juego
-        AudioManager.shared.playBackgroundMusic(filename: "Sounds/spacemusic.mp3")
     }
     
     deinit {
         timer?.invalidate()
         NotificationCenter.default.removeObserver(self)
-        
-        // Detener la música al salir del juego
-        AudioManager.shared.stopBackgroundMusic()
     }
     
     // Configurar la dificultad según el nivel
@@ -89,6 +83,9 @@ class GameViewModel: ObservableObject {
             gameModel.levelDuration = 90 // 1:30 minutos
             gameModel.playerShootCooldown = 0.4 // Mayor tiempo entre disparos en nivel inicial
             
+            // Música del nivel 1
+            AudioManager.shared.playBackgroundMusic(filename: "Sounds/spacemusic.mp3")
+            
         case 2:
             // Nivel 2: Más enemigos y más rápidos, fondo azulado
             enemySpawnInterval = 1.8  // Aumentado de 1.2 a 1.8 segundos
@@ -97,6 +94,9 @@ class GameViewModel: ObservableObject {
             enemyProjectileSpeed = 4.0 // Reducida de 5.5 a 4.0
             gameModel.levelDuration = 90 // 1:30 minutos
             gameModel.playerShootCooldown = 0.35
+            
+            // Música del nivel 2
+            AudioManager.shared.playBackgroundMusic(filename: "Sounds/Bowser's Galaxy Generator - Super Mario Galaxy 2.mp3")
             
         case 3:
             // Nivel 3: Enemigos más agresivos, fondo morado
@@ -107,6 +107,9 @@ class GameViewModel: ObservableObject {
             gameModel.levelDuration = 90 // 1:30 minutos
             gameModel.playerShootCooldown = 0.3
             
+            // Música del nivel 3
+            AudioManager.shared.playBackgroundMusic(filename: "Sounds/Melty Monster Galaxy - Super Mario Galaxy 2.mp3")
+            
         case 4:
             // Nivel 4: Enemigos disparan con mayor frecuencia, fondo rojizo
             enemySpawnInterval = 1.2  // Aumentado de 0.8 a 1.2 segundos
@@ -115,6 +118,9 @@ class GameViewModel: ObservableObject {
             enemyProjectileSpeed = 5.0 // Reducida de 6.5 a 5.0
             gameModel.levelDuration = 90 // 1:30 minutos
             gameModel.playerShootCooldown = 0.25
+            
+            // Música del nivel 4
+            AudioManager.shared.playBackgroundMusic(filename: "Sounds/spacemusic.mp3")
             
         case 5:
             // Nivel 5: Batalla final, fondo naranja/rojo
@@ -125,6 +131,9 @@ class GameViewModel: ObservableObject {
             gameModel.levelDuration = 90 // 1:30 minutos
             gameModel.playerShootCooldown = 0.2 // Menor tiempo entre disparos en nivel final
             
+            // Música del nivel 5
+            AudioManager.shared.playBackgroundMusic(filename: "Sounds/spacemusic.mp3")
+            
         default:
             // Niveles superiores: Dificultad extrema
             enemySpawnInterval = max(0.6, 1.0 - (Double(level) * 0.08))    // Mínimo 0.6 segundos (antes 0.4)
@@ -133,6 +142,9 @@ class GameViewModel: ObservableObject {
             enemyProjectileSpeed = min(7.0, 3.5 + (CGFloat(level) * 0.4))  // Máximo 7 (antes 10)
             gameModel.levelDuration = 90 // 1:30 minutos
             gameModel.playerShootCooldown = max(0.15, 0.4 - (Double(level-5) * 0.02)) // Mínimo 0.15 segundos
+            
+            // Música para niveles superiores
+            AudioManager.shared.playBackgroundMusic(filename: "Sounds/spacemusic.mp3")
         }
     }
     
@@ -717,13 +729,6 @@ class GameViewModel: ObservableObject {
     // Método para alternar el estado de pausa
     func togglePause() {
         gameModel.togglePause()
-        
-        // Pausar o reanudar la música según el estado del juego
-        if gameModel.isPaused {
-            AudioManager.shared.pauseBackgroundMusic()
-        } else {
-            AudioManager.shared.resumeBackgroundMusic()
-        }
     }
     
     // Método para crear una explosión
