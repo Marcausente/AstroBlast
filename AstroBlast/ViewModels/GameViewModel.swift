@@ -76,22 +76,22 @@ class GameViewModel: ObservableObject {
         switch level {
         case 1:
             // Nivel 1: Configuración básica
-            enemySpawnInterval = 2.5  // Aumentado de 2.0 a 2.5 segundos
-            enemyShootInterval = 1.8  // Aumentado de 1.5 a 1.8 segundos
-            enemySpeed = 1.5          // Reducida de 2.0 a 1.5
+            enemySpawnInterval = 2.2  // Reducido de 2.5 a 2.2 segundos
+            enemyShootInterval = 1.6  // Reducido de 1.8 a 1.6 segundos
+            enemySpeed = 1.5
             enemyProjectileSpeed = 3.5
             gameModel.levelDuration = 90 // 1:30 minutos
-            gameModel.playerShootCooldown = 0.4 // Mayor tiempo entre disparos en nivel inicial
+            gameModel.playerShootCooldown = 0.4
             
             // Música del nivel 1
             AudioManager.shared.playBackgroundMusic(filename: "Sounds/spacemusic.mp3")
             
         case 2:
             // Nivel 2: Más enemigos y más rápidos, fondo azulado
-            enemySpawnInterval = 1.8  // Aumentado de 1.2 a 1.8 segundos
-            enemyShootInterval = 1.5  // Aumentado de 1.3 a 1.5 segundos
-            enemySpeed = 1.8          // Reducida de 2.5 a 1.8
-            enemyProjectileSpeed = 4.0 // Reducida de 5.5 a 4.0
+            enemySpawnInterval = 1.5  // Reducido de 1.8 a 1.5 segundos
+            enemyShootInterval = 1.3  // Reducido de 1.5 a 1.3 segundos
+            enemySpeed = 1.8
+            enemyProjectileSpeed = 4.0
             gameModel.levelDuration = 90 // 1:30 minutos
             gameModel.playerShootCooldown = 0.35
             
@@ -100,51 +100,20 @@ class GameViewModel: ObservableObject {
             
         case 3:
             // Nivel 3: Enemigos más agresivos, fondo morado
-            enemySpawnInterval = 1.4  // Aumentado de 0.9 a 1.4 segundos
-            enemyShootInterval = 1.2  // Aumentado de 0.8 a 1.2 segundos
-            enemySpeed = 2.0          // Reducida de 3.0 a 2.0
-            enemyProjectileSpeed = 4.5 // Reducida de 6.0 a 4.5
+            enemySpawnInterval = 1.2  // Reducido de 1.4 a 1.2 segundos
+            enemyShootInterval = 1.0  // Reducido de 1.2 a 1.0 segundos
+            enemySpeed = 2.0
+            enemyProjectileSpeed = 4.5
             gameModel.levelDuration = 90 // 1:30 minutos
             gameModel.playerShootCooldown = 0.3
             
             // Música del nivel 3
             AudioManager.shared.playBackgroundMusic(filename: "Sounds/Melty Monster Galaxy - Super Mario Galaxy 2.mp3")
             
-        case 4:
-            // Nivel 4: Enemigos disparan con mayor frecuencia, fondo rojizo
-            enemySpawnInterval = 1.2  // Aumentado de 0.8 a 1.2 segundos
-            enemyShootInterval = 0.9  // Aumentado de 0.6 a 0.9 segundos
-            enemySpeed = 2.3          // Reducida de 3.5 a 2.3
-            enemyProjectileSpeed = 5.0 // Reducida de 6.5 a 5.0
-            gameModel.levelDuration = 90 // 1:30 minutos
-            gameModel.playerShootCooldown = 0.25
-            
-            // Música del nivel 4
-            AudioManager.shared.playBackgroundMusic(filename: "Sounds/spacemusic.mp3")
-            
-        case 5:
-            // Nivel 5: Batalla final, fondo naranja/rojo
-            enemySpawnInterval = 1.0  // Aumentado de 0.7 a 1.0 segundos
-            enemyShootInterval = 0.8  // Aumentado de 0.5 a 0.8 segundos
-            enemySpeed = 2.8          // Reducida de 4.0 a 2.8
-            enemyProjectileSpeed = 5.5 // Reducida de 7.0 a 5.5
-            gameModel.levelDuration = 90 // 1:30 minutos
-            gameModel.playerShootCooldown = 0.2 // Menor tiempo entre disparos en nivel final
-            
-            // Música del nivel 5
-            AudioManager.shared.playBackgroundMusic(filename: "Sounds/spacemusic.mp3")
-            
         default:
-            // Niveles superiores: Dificultad extrema
-            enemySpawnInterval = max(0.6, 1.0 - (Double(level) * 0.08))    // Mínimo 0.6 segundos (antes 0.4)
-            enemyShootInterval = max(0.5, 1.0 - (Double(level) * 0.08))    // Mínimo 0.5 segundos (antes 0.3)
-            enemySpeed = min(5.0, 1.5 + (CGFloat(level) * 0.4))           // Máximo velocidad 5 (antes 7)
-            enemyProjectileSpeed = min(7.0, 3.5 + (CGFloat(level) * 0.4))  // Máximo 7 (antes 10)
-            gameModel.levelDuration = 90 // 1:30 minutos
-            gameModel.playerShootCooldown = max(0.15, 0.4 - (Double(level-5) * 0.02)) // Mínimo 0.15 segundos
-            
-            // Música para niveles superiores
-            AudioManager.shared.playBackgroundMusic(filename: "Sounds/spacemusic.mp3")
+            // Si por alguna razón se intenta acceder a un nivel superior al 3,
+            // se reinicia al nivel 1
+            configureForLevel(1)
         }
     }
     
@@ -417,48 +386,29 @@ class GameViewModel: ObservableObject {
                     enemySize = CGSize(width: 60, height: 60)
                     
                 case 2:
-                    // Nivel 2: Mezcla de enemigos normales y ocasionalmente más resistentes
-                    if Int.random(in: 1...10) <= 3 {
-                        enemyHealth = 2
-                        enemySize = CGSize(width: 65, height: 65)
-                    }
+                    // Nivel 2: Enemigos básicos
+                    enemyHealth = 1
+                    enemySize = CGSize(width: 60, height: 60)
                     
                 case 3:
-                    // Nivel 3: Más probabilidad de enemigos resistentes
-                    if Int.random(in: 1...10) <= 5 {
-                        enemyHealth = 2
-                        enemySize = CGSize(width: 65, height: 65)
-                    }
-                    // Y algunos muy resistentes
-                    if Int.random(in: 1...15) <= 2 {
-                        enemyHealth = 3
-                        enemySize = CGSize(width: 70, height: 70)
-                    }
-                    
-                case 4, 5:
-                    // Niveles 4 y 5: Alta probabilidad de enemigos resistentes
+                    // Nivel 3: Mezcla de enemigos con diferentes niveles de vida
                     let roll = Int.random(in: 1...10)
-                    if roll <= 6 {
+                    if roll <= 4 {
+                        enemyHealth = 1
+                        enemySize = CGSize(width: 60, height: 60)
+                    } else if roll <= 8 {
                         enemyHealth = 2
                         enemySize = CGSize(width: 65, height: 65)
-                    } else if roll <= 9 {
+                    } else {
                         enemyHealth = 3
                         enemySize = CGSize(width: 70, height: 70)
                     }
                     
                 default:
-                    // Niveles superiores: Enemigos muy resistentes
-                    let roll = Int.random(in: 1...10)
-                    if roll <= 4 {
-                        enemyHealth = 2
-                        enemySize = CGSize(width: 65, height: 65)
-                    } else if roll <= 8 {
-                        enemyHealth = 3
-                        enemySize = CGSize(width: 70, height: 70)
-                    } else {
-                        enemyHealth = 4
-                        enemySize = CGSize(width: 75, height: 75)
-                    }
+                    // Si por alguna razón se intenta acceder a un nivel superior al 3,
+                    // se usa la configuración del nivel 1
+                    enemyHealth = 1
+                    enemySize = CGSize(width: 60, height: 60)
                 }
                 
                 // Crear un nuevo enemigo en la parte superior de la pantalla

@@ -461,11 +461,19 @@ struct GameView: View {
                     
                     // Enemigos
                     ForEach(viewModel.gameModel.enemies) { enemy in
-                        Image("Enemigo")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: enemy.size.width, height: enemy.size.height)
-                            .position(enemy.position)
+                        if viewModel.gameModel.level == 3 && enemy.health > 1 {
+                            Image("bigenemy")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: enemy.size.width, height: enemy.size.height)
+                                .position(enemy.position)
+                        } else {
+                            Image("Enemigo")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: enemy.size.width, height: enemy.size.height)
+                                .position(enemy.position)
+                        }
                     }
                     
                     // Proyectiles del jugador

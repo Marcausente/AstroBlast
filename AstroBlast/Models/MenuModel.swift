@@ -46,13 +46,11 @@ struct MenuModel {
         }
     }
     
-    // Niveles disponibles (se mantiene para compatibilidad)
+    // Niveles disponibles
     enum GameLevel: Int, CaseIterable, Identifiable {
         case level1 = 1
         case level2 = 2
         case level3 = 3
-        case level4 = 4
-        case level5 = 5
         
         var id: Int {
             return self.rawValue
