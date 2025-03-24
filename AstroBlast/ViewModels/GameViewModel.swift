@@ -31,14 +31,14 @@ class GameViewModel: ObservableObject {
     @Published var joystickDirection: CGFloat = 0
     
     // Velocidad de movimiento de la nave
-    private let shipSpeed: CGFloat = 18 // Aumentada de 10 a 18 para un movimiento más rápido
+    private let shipSpeed: CGFloat = 12 // Reducida de 18 a 12 para un movimiento más controlado
     
     // Constantes para los enemigos
     private var enemySpawnInterval: TimeInterval = 2.0 // Tiempo entre generación de enemigos
     private var enemyShootInterval: TimeInterval = 1.5 // Tiempo entre disparos enemigos
     private var enemySpeed: CGFloat = 2.0 // Velocidad de movimiento de los enemigos
-    private var enemyProjectileSpeed: CGFloat = 5.0 // Velocidad de los proyectiles enemigos
-    private var playerProjectileSpeed: CGFloat = 15.0 // Velocidad de los proyectiles del jugador
+    private var enemyProjectileSpeed: CGFloat = 3.5 // Reducida de 5.0 a 3.5
+    private var playerProjectileSpeed: CGFloat = 10.0 // Reducida de 15.0 a 10.0
     
     // Posición Y objetivo para los enemigos (mitad de la pantalla)
     private var enemyTargetY: CGFloat {
@@ -82,55 +82,55 @@ class GameViewModel: ObservableObject {
         switch level {
         case 1:
             // Nivel 1: Configuración básica
-            enemySpawnInterval = 2.0  // Un enemigo cada 2 segundos
-            enemyShootInterval = 1.5  // Disparan cada 1.5 segundos
-            enemySpeed = 2.0          // Velocidad base
-            enemyProjectileSpeed = 5.0
+            enemySpawnInterval = 2.5  // Aumentado de 2.0 a 2.5 segundos
+            enemyShootInterval = 1.8  // Aumentado de 1.5 a 1.8 segundos
+            enemySpeed = 1.5          // Reducida de 2.0 a 1.5
+            enemyProjectileSpeed = 3.5
             gameModel.levelDuration = 90 // 1:30 minutos
             gameModel.playerShootCooldown = 0.4 // Mayor tiempo entre disparos en nivel inicial
             
         case 2:
             // Nivel 2: Más enemigos y más rápidos, fondo azulado
-            enemySpawnInterval = 1.2  // Más enemigos (cada 1.2 segundos)
-            enemyShootInterval = 1.3  // Disparan un poco más seguido
-            enemySpeed = 2.5          // Se mueven más rápido
-            enemyProjectileSpeed = 5.5
+            enemySpawnInterval = 1.8  // Aumentado de 1.2 a 1.8 segundos
+            enemyShootInterval = 1.5  // Aumentado de 1.3 a 1.5 segundos
+            enemySpeed = 1.8          // Reducida de 2.5 a 1.8
+            enemyProjectileSpeed = 4.0 // Reducida de 5.5 a 4.0
             gameModel.levelDuration = 90 // 1:30 minutos
             gameModel.playerShootCooldown = 0.35
             
         case 3:
             // Nivel 3: Enemigos más agresivos, fondo morado
-            enemySpawnInterval = 0.9  // Enemigos aparecen muy seguido
-            enemyShootInterval = 0.8  // Disparan mucho más seguido
-            enemySpeed = 3.0          // Se mueven más rápido
-            enemyProjectileSpeed = 6.0
+            enemySpawnInterval = 1.4  // Aumentado de 0.9 a 1.4 segundos
+            enemyShootInterval = 1.2  // Aumentado de 0.8 a 1.2 segundos
+            enemySpeed = 2.0          // Reducida de 3.0 a 2.0
+            enemyProjectileSpeed = 4.5 // Reducida de 6.0 a 4.5
             gameModel.levelDuration = 90 // 1:30 minutos
             gameModel.playerShootCooldown = 0.3
             
         case 4:
             // Nivel 4: Enemigos disparan con mayor frecuencia, fondo rojizo
-            enemySpawnInterval = 0.8
-            enemyShootInterval = 0.6
-            enemySpeed = 3.5
-            enemyProjectileSpeed = 6.5
+            enemySpawnInterval = 1.2  // Aumentado de 0.8 a 1.2 segundos
+            enemyShootInterval = 0.9  // Aumentado de 0.6 a 0.9 segundos
+            enemySpeed = 2.3          // Reducida de 3.5 a 2.3
+            enemyProjectileSpeed = 5.0 // Reducida de 6.5 a 5.0
             gameModel.levelDuration = 90 // 1:30 minutos
             gameModel.playerShootCooldown = 0.25
             
         case 5:
             // Nivel 5: Batalla final, fondo naranja/rojo
-            enemySpawnInterval = 0.7
-            enemyShootInterval = 0.5
-            enemySpeed = 4.0
-            enemyProjectileSpeed = 7.0
+            enemySpawnInterval = 1.0  // Aumentado de 0.7 a 1.0 segundos
+            enemyShootInterval = 0.8  // Aumentado de 0.5 a 0.8 segundos
+            enemySpeed = 2.8          // Reducida de 4.0 a 2.8
+            enemyProjectileSpeed = 5.5 // Reducida de 7.0 a 5.5
             gameModel.levelDuration = 90 // 1:30 minutos
             gameModel.playerShootCooldown = 0.2 // Menor tiempo entre disparos en nivel final
             
         default:
             // Niveles superiores: Dificultad extrema
-            enemySpawnInterval = max(0.4, 1.0 - (Double(level) * 0.1))    // Mínimo 0.4 segundos
-            enemyShootInterval = max(0.3, 1.0 - (Double(level) * 0.1))    // Mínimo 0.3 segundos
-            enemySpeed = min(7.0, 2.0 + (CGFloat(level) * 0.5))          // Máximo velocidad 7
-            enemyProjectileSpeed = min(10.0, 5.0 + (CGFloat(level) * 0.5))
+            enemySpawnInterval = max(0.6, 1.0 - (Double(level) * 0.08))    // Mínimo 0.6 segundos (antes 0.4)
+            enemyShootInterval = max(0.5, 1.0 - (Double(level) * 0.08))    // Mínimo 0.5 segundos (antes 0.3)
+            enemySpeed = min(5.0, 1.5 + (CGFloat(level) * 0.4))           // Máximo velocidad 5 (antes 7)
+            enemyProjectileSpeed = min(7.0, 3.5 + (CGFloat(level) * 0.4))  // Máximo 7 (antes 10)
             gameModel.levelDuration = 90 // 1:30 minutos
             gameModel.playerShootCooldown = max(0.15, 0.4 - (Double(level-5) * 0.02)) // Mínimo 0.15 segundos
         }
@@ -144,14 +144,17 @@ class GameViewModel: ObservableObject {
     private func startGameLoop() {
         lastUpdateTime = Date().timeIntervalSince1970
         
-        timer = Timer.scheduledTimer(withTimeInterval: 0.016, repeats: true) { [weak self] _ in
+        timer = Timer.scheduledTimer(withTimeInterval: 0.02, repeats: true) { [weak self] _ in
             guard let self = self else { return }
             
             let currentTime = Date().timeIntervalSince1970
             let deltaTime = currentTime - self.lastUpdateTime
             self.lastUpdateTime = currentTime
             
-            self.updateGame(deltaTime: deltaTime)
+            // Limitamos deltaTime para evitar saltos bruscos si hay lag
+            let cappedDeltaTime = min(deltaTime, 0.033) // Máximo ~30fps
+            
+            self.updateGame(deltaTime: cappedDeltaTime)
         }
         
         // Asegurarnos que el timer se ejecute en el modo común de ejecución
@@ -220,14 +223,13 @@ class GameViewModel: ObservableObject {
             for (enemyIndex, enemy) in gameModel.enemies.enumerated().reversed() {
                 if enemy.isHit(by: projectile) {
                     // Crear una explosión en la posición del enemigo
-                    gameModel.createExplosion(
+                    createExplosion(
                         at: enemy.position,
                         size: enemy.size.width,
                         isEnemy: true
                     )
                     
-                    // Reproducir el sonido de destrucción
-                    print("💥 Reproduciendo sonido de destrucción para nave enemiga")
+                    // Reproducir el sonido de explosión
                     AudioManager.shared.playSoundEffect(filename: "Sounds/Destroysound.mp3")
                     
                     // Eliminar el enemigo
@@ -528,13 +530,13 @@ class GameViewModel: ObservableObject {
                         
                         if updatedEnemy.health <= 0 {
                             // Crear una explosión en la posición del enemigo
-                            gameModel.createExplosion(
+                            createExplosion(
                                 at: enemy.position,
                                 size: enemy.size.width,
                                 isEnemy: true
                             )
                             
-                            // Reproducir el sonido de destrucción
+                            // Reproducir el sonido de explosión
                             AudioManager.shared.playSoundEffect(filename: "Sounds/Destroysound.mp3")
                             
                             // Eliminar el enemigo
@@ -566,11 +568,14 @@ class GameViewModel: ObservableObject {
                 }
                 
                 // Crear una pequeña explosión donde impactó el proyectil
-                gameModel.createExplosion(
+                createExplosion(
                     at: projectile.position,
                     size: 30,
                     isEnemy: false
                 )
+                
+                // Reproducir el sonido de explosión
+                AudioManager.shared.playSoundEffect(filename: "Sounds/Destroysound.mp3")
                 
                 // Reducir vidas
                 gameModel.lives -= 1
@@ -578,13 +583,13 @@ class GameViewModel: ObservableObject {
                 // Verificar si el juego ha terminado
                 if gameModel.lives <= 0 {
                     // Crear una explosión grande para la nave del jugador
-                    gameModel.createExplosion(
+                    createExplosion(
                         at: playerPosition,
                         size: shipWidth * 1.5,
                         isEnemy: false
                     )
                     
-                    // Reproducir sonido de destrucción cuando la nave del jugador es completamente destruida
+                    // Reproducir el sonido de explosión para la nave del jugador
                     AudioManager.shared.playSoundEffect(filename: "Sounds/Destroysound.mp3")
                     
                     gameModel.isGameOver = true
@@ -605,11 +610,14 @@ class GameViewModel: ObservableObject {
             
             if enemyRect.intersects(playerRect) {
                 // Crear una explosión en la posición del enemigo
-                gameModel.createExplosion(
+                createExplosion(
                     at: enemy.position,
                     size: enemy.size.width,
                     isEnemy: true
                 )
+                
+                // Reproducir el sonido de explosión
+                AudioManager.shared.playSoundEffect(filename: "Sounds/Destroysound.mp3")
                 
                 // Eliminar el enemigo
                 if enemyIndex < gameModel.enemies.count {
@@ -622,13 +630,13 @@ class GameViewModel: ObservableObject {
                 // Verificar si el juego ha terminado
                 if gameModel.lives <= 0 {
                     // Crear una explosión grande para la nave del jugador
-                    gameModel.createExplosion(
+                    createExplosion(
                         at: playerPosition,
                         size: shipWidth * 1.5,
                         isEnemy: false
                     )
                     
-                    // Reproducir sonido de destrucción cuando la nave del jugador es completamente destruida
+                    // Reproducir el sonido de explosión para la nave del jugador
                     AudioManager.shared.playSoundEffect(filename: "Sounds/Destroysound.mp3")
                     
                     gameModel.isGameOver = true
@@ -716,5 +724,24 @@ class GameViewModel: ObservableObject {
         } else {
             AudioManager.shared.resumeBackgroundMusic()
         }
+    }
+    
+    // Método para crear una explosión
+    func createExplosion(at position: CGPoint, size: CGFloat, isEnemy: Bool = true) {
+        // Limitar el número de explosiones simultáneas para mejorar rendimiento
+        if gameModel.explosions.count >= 10 {
+            // Eliminar la explosión más antigua
+            gameModel.explosions.removeFirst()
+        }
+        
+        let explosion = GameModel.Explosion(
+            position: position,
+            size: size,
+            isEnemy: isEnemy
+        )
+        gameModel.explosions.append(explosion)
+        
+        // Reproducir el sonido de explosión
+        AudioManager.shared.playSoundEffect(filename: "Sounds/Destroysound.mp3")
     }
 } 
