@@ -20,7 +20,7 @@ struct GameModel {
     
     // Tiempo de juego
     var elapsedTime: TimeInterval = 0
-    var levelDuration: TimeInterval = 60 // Contador del tiempo
+    var levelDuration: TimeInterval = 5 // Contador del tiempo
     
     // Posición del jugador
     var playerPosition: CGFloat = 0 // Posición X de la nave del jugador
@@ -96,6 +96,21 @@ struct GameModel {
                 width: size.width,
                 height: size.height
             )
+            
+            // Para el boss, usamos un hitbox más pequeño para mejor precisión
+            if type == .boss {
+                let bossHitboxWidth = size.width * 0.7
+                let bossHitboxHeight = size.height * 0.7
+                
+                let bossHitbox = CGRect(
+                    x: position.x - bossHitboxWidth/2,
+                    y: position.y - bossHitboxHeight/2,
+                    width: bossHitboxWidth,
+                    height: bossHitboxHeight
+                )
+                
+                return bossHitbox.contains(projectile.position)
+            }
             
             return enemyRect.contains(projectile.position)
         }

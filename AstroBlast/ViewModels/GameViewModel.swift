@@ -57,11 +57,22 @@ class GameViewModel: ObservableObject {
         // Configurar el nivel inicial
         gameModel.level = level
         
+        print("Inicializando GameViewModel con nivel: \(level)")
+        
         // Ajustar la dificultad según el nivel
-        configureForLevel(level)
+        if level == 4 {
+            // Configuración especial para el nivel boss
+            print("Inicializando nivel BOSS")
+            gameModel.isBossLevel = true
+            gameModel.isLevelCompleted = false
+            gameModel.levelDuration = 9999
+        }
         
         // Actualizar las dimensiones de la pantalla
         updateScreenDimensions()
+        
+        // Configurar el nivel (después de actualizar dimensiones)
+        configureForLevel(level)
         
         // Iniciar el bucle del juego
         startGameLoop()
@@ -75,8 +86,11 @@ class GameViewModel: ObservableObject {
         NotificationCenter.default.removeObserver(self)
     }
     
-    // Configurar la dificultad según el nivel
+    // Método para configurar el juego según el nivel
     private func configureForLevel(_ level: Int) {
+        print("GameViewModel - Configurando nivel: \(level)")
+        
+        // Primero configuramos los parámetros básicos a través de LevelConfiguration
         LevelConfiguration.configureForLevel(
             level,
             gameModel: &gameModel,
@@ -85,7 +99,11 @@ class GameViewModel: ObservableObject {
             enemySpeed: &enemySpeed,
             enemyProjectileSpeed: &enemyProjectileSpeed,
             spawnBoss: { [weak self] in
-                self?.spawnBoss()
+                // Este es el único lugar donde deberíamos generar el boss
+                if self?.gameModel.enemies.isEmpty == true {
+                    print("Generando boss desde callback de LevelConfiguration")
+                    self?.spawnBoss()
+                }
             }
         )
     }
@@ -142,15 +160,16 @@ class GameViewModel: ObservableObject {
         checkCollisions()
         
         // Solo generar enemigos y disparos enemigos si no estamos en nivel de jefe
-        // o si todavía hay enemigos en el nivel de jefe
         if !gameModel.isBossLevel {
             spawnEnemies(deltaTime: deltaTime)
             enemyShoot(deltaTime: deltaTime)
         } else if !gameModel.enemies.isEmpty {
             // Si estamos en nivel de jefe, usar un patrón de disparo especial
             bossShoot(deltaTime: deltaTime)
-        } else {
-            // Si no hay enemigos en el nivel de jefe, significa que el boss ha sido derrotado
+        } else if gameModel.isBossLevel && gameModel.elapsedTime > 2.0 {
+            // Si no hay enemigos en el nivel de jefe y ha pasado suficiente tiempo,
+            // significa que el boss ha sido derrotado
+            print("Boss derrotado. Nivel completado.")
             gameModel.isLevelCompleted = true
         }
     }
@@ -190,25 +209,56 @@ class GameViewModel: ObservableObject {
                     // Crear una explosión en la posición del enemigo
                     createExplosion(
                         at: enemy.position,
-                        size: enemy.size.width,
+                        size: enemy.size.width * 0.3,
                         isEnemy: true
                     )
                     
                     // Reproducir el sonido de explosión
                     AudioManager.shared.playSoundEffect(filename: "Sounds/Destroysound.mp3")
                     
-                    // Eliminar el enemigo
-                    if enemyIndex < gameModel.enemies.count {
-                        gameModel.enemies.remove(at: enemyIndex)
-                    }
-                    
                     // Eliminar el proyectil
                     if index < gameModel.projectiles.count {
                         gameModel.projectiles.remove(at: index)
                     }
                     
-                    // Incrementar la puntuación
-                    increaseScore()
+                    // Si es un boss, reducir su salud en lugar de eliminarlo directamente
+                    if enemy.type == .boss {
+                        if enemyIndex < gameModel.enemies.count {
+                            var updatedBoss = gameModel.enemies[enemyIndex]
+                            updatedBoss.health -= 1
+                            print("Boss dañado. Salud restante: \(updatedBoss.health)")
+                            
+                            // Si el boss ha sido derrotado
+                            if updatedBoss.health <= 0 {
+                                // Crear una gran explosión para el boss
+                                createExplosion(
+                                    at: updatedBoss.position,
+                                    size: updatedBoss.size.width,
+                                    isEnemy: true
+                                )
+                                
+                                // Eliminar el boss
+                                gameModel.enemies.remove(at: enemyIndex)
+                                
+                                // Incrementar la puntuación (más puntos por derrotar al boss)
+                                increaseScore(by: 50)
+                                
+                                // Marcar el nivel como completado
+                                gameModel.isLevelCompleted = true
+                            } else {
+                                // Actualizar el boss con la salud reducida
+                                gameModel.enemies[enemyIndex] = updatedBoss
+                            }
+                        }
+                    } else {
+                        // Para enemigos normales, eliminarlos directamente
+                        if enemyIndex < gameModel.enemies.count {
+                            gameModel.enemies.remove(at: enemyIndex)
+                        }
+                        
+                        // Incrementar la puntuación
+                        increaseScore()
+                    }
                     
                     break
                 }
@@ -746,6 +796,15 @@ class GameViewModel: ObservableObject {
     
     // Método para generar el boss
     private func spawnBoss() {
+        // Verificar si ya existe un boss
+        let bosses = gameModel.enemies.filter { $0.type == .boss }
+        if !bosses.isEmpty {
+            print("Ya existe un boss en el juego. No se generará otro.")
+            return
+        }
+        
+        print("Generando boss...")
+        
         // Crear el boss en el centro de la pantalla
         var boss = GameModel.Enemy(
             position: CGPoint(x: screenWidth / 2, y: 150),
@@ -760,6 +819,8 @@ class GameViewModel: ObservableObject {
         
         // Añadir el boss al juego
         gameModel.enemies.append(boss)
+        
+        print("Boss generado con \(boss.health) de salud y tamaño \(boss.size)")
     }
     
     // Variable para controlar el ciclo de disparo del boss
