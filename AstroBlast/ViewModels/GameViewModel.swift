@@ -84,7 +84,7 @@ class GameViewModel: ObservableObject {
             enemyShootInterval = 1.6  // Reducido de 1.8 a 1.6 segundos
             enemySpeed = 1.5
             enemyProjectileSpeed = 3.5
-            gameModel.levelDuration = 75 // Cambiado de 90 a 30 segundos para pruebas
+            gameModel.levelDuration = 60 // Tiempo que dura el nivel
             gameModel.playerShootCooldown = 0.4
             gameModel.isBossLevel = false
             
@@ -93,11 +93,11 @@ class GameViewModel: ObservableObject {
             
         case 2:
             // Nivel 2: Más enemigos y más rápidos, fondo azulado
-            enemySpawnInterval = 1.5  // Reducido de 1.8 a 1.5 segundos
-            enemyShootInterval = 1.3  // Reducido de 1.5 a 1.3 segundos
+            enemySpawnInterval = 1.5  // Tiempo de spawn
+            enemyShootInterval = 1.3  // Tiempo de disparo
             enemySpeed = 1.8
             enemyProjectileSpeed = 4.0
-            gameModel.levelDuration = 75 // Cambiado de 90 a 30 segundos para pruebas
+            gameModel.levelDuration = 60 // Cambiado de 90 a 30 segundos para pruebas
             gameModel.playerShootCooldown = 0.35
             gameModel.isBossLevel = false
             
@@ -106,11 +106,11 @@ class GameViewModel: ObservableObject {
             
         case 3:
             // Nivel 3: Enemigos más agresivos, fondo morado
-            enemySpawnInterval = 1.2  // Reducido de 1.4 a 1.2 segundos
-            enemyShootInterval = 1.0  // Reducido de 1.2 a 1.0 segundos
+            enemySpawnInterval = 1.2  // Tiempo de spawn
+            enemyShootInterval = 1.0  // Tiempo de disparo
             enemySpeed = 2.0
             enemyProjectileSpeed = 4.5
-            gameModel.levelDuration = 75 // Cambiado de 90 a 30 segundos para pruebas
+            gameModel.levelDuration = 60 // Cambiado de 90 a 30 segundos para pruebas
             gameModel.playerShootCooldown = 0.3
             gameModel.isBossLevel = false
             
@@ -119,10 +119,10 @@ class GameViewModel: ObservableObject {
             
         case 4:
             // Nivel 4: Boss final
-            enemyShootInterval = 0.8  // Aumentado de 0.5 a 0.8 para dar más tiempo entre ataques
-            enemySpeed = 0.3         // El boss se mueve lentamente
-            enemyProjectileSpeed = 3.0 // Reducido de 5.0 a 3.0 para proyectiles más lentos
-            gameModel.playerShootCooldown = 0.25 // El jugador puede disparar más rápido
+            enemyShootInterval = 0.8
+            enemySpeed = 0.3
+            enemyProjectileSpeed = 3.0
+            gameModel.playerShootCooldown = 0.25 // Esto es para que el player dispare un poquito mas rapido
             gameModel.isBossLevel = true // Activar el modo boss
             
             // Música del nivel del boss
@@ -284,7 +284,8 @@ class GameViewModel: ObservableObject {
         var positionMap: [CGPoint: Bool] = [:]
         for enemy in gameModel.enemies {
             let gridX = Int(enemy.position.x / 60) // Tamaño de la cuadrícula
-            let gridY = Int(enemy.position.y / 60)
+            let gridY = Int(enemy.position.y / 60) // Añadimos la definición de gridY
+
             positionMap[CGPoint(x: gridX, y: gridY)] = true
         }
         
@@ -546,7 +547,7 @@ class GameViewModel: ObservableObject {
     private func checkCollisions() {
         // Cache de las posiciones para evitar recálculos
         let playerPosition = CGPoint(x: gameModel.playerPosition, y: getShipYPosition())
-        let playerSize = CGSize(width: shipWidth, height: shipHeight)
+        let playerSize = CGSize(width: shipWidth * 0.85, height: shipHeight * 0.85) // Hitbox de la nave
         let playerRect = CGRect(
             x: playerPosition.x - playerSize.width/2,
             y: playerPosition.y - playerSize.height/2,
