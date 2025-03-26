@@ -35,6 +35,3 @@ AstroBlast es un juego de temática espacial con controles en Joystick y modo de
 
 ## Desarrollado por
 Marc Fernández © 2025
-
-## Licencia
-[Especificar la licencia] 
