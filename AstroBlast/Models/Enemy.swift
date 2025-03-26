@@ -9,7 +9,7 @@ struct Enemy: Identifiable {
     var size: CGSize = CGSize(width: 60, height: 60)
     var lastShootTime: TimeInterval = 0
     var isMoving: Bool = true // Indica si el enemigo está en movimiento
-    var targetY: CGFloat? = nil // Posición Y objetivo (mitad de la pantalla)
+    var targetY: CGFloat? = nil // Posición Y objetivo
     var type: EnemyType = .normal // Tipo de enemigo
     
     enum EnemyType {
@@ -27,7 +27,7 @@ struct Enemy: Identifiable {
             height: size.height
         )
         
-        // Para el boss, usamos un hitbox más pequeño para mejor precisión
+        // Datos especificos del boss
         if type == .boss {
             let bossHitboxWidth = size.width * 0.7
             let bossHitboxHeight = size.height * 0.7
