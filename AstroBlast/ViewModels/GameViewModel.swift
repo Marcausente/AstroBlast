@@ -457,7 +457,7 @@ class GameViewModel: ObservableObject {
                 // Personalización de enemigos según el nivel
                 var enemySize = CGSize(width: 60, height: 60)
                 var enemyHealth = 1
-                var enemyType: GameModel.Enemy.EnemyType = .normal
+                var enemyType: Enemy.EnemyType = .normal
                 
                 switch gameModel.level {
                 case 1:
@@ -496,7 +496,7 @@ class GameViewModel: ObservableObject {
                 }
                 
                 // Crear un nuevo enemigo en la parte superior de la pantalla
-                var enemy = GameModel.Enemy(
+                var enemy = Enemy(
                     position: CGPoint(x: randomX, y: 50),
                     isMoving: true,
                     targetY: enemyTargetY
@@ -806,16 +806,13 @@ class GameViewModel: ObservableObject {
         print("Generando boss...")
         
         // Crear el boss en el centro de la pantalla
-        var boss = GameModel.Enemy(
-            position: CGPoint(x: screenWidth / 2, y: 150),
+        var boss = Enemy(
+            position: CGPoint(x: screenWidth/2, y: 100),
+            health: 85,
+            size: CGSize(width: 280, height: 280), // Boss más grande
             isMoving: true,
-            targetY: screenHeight * 0.3 // El boss se detiene más arriba
+            type: .boss
         )
-        
-        // Configurar las propiedades del boss
-        boss.health = 85
-        boss.size = CGSize(width: 280, height: 280) // Boss más grande
-        boss.type = .boss // Establecer el tipo como boss
         
         // Añadir el boss al juego
         gameModel.enemies.append(boss)
