@@ -71,7 +71,7 @@ struct GameModel {
         }
     }
     
-    // Estructura para explosiones
+    // Explosiones
     struct Explosion: Identifiable {
         let id = UUID()
         let position: CGPoint

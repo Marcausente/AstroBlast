@@ -89,8 +89,8 @@ struct MenuModel {
         let version: String = "1.0"
         let developer: String = "Marc Fernández"
         let year: String = "2025"
-        let artCredits: String = "Diseño gráfico por el equipo de AstroBlast"
-        let musicCredits: String = "Música y efectos de sonido por el equipo de AstroBlast"
+        let artCredits: String = "Diseño gráfico sacado de google imagenes"
+        let musicCredits: String = "Música y efectos sacado de google"
     }
     
     // Estado actual del menú

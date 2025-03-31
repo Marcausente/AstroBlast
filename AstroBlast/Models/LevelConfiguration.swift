@@ -24,7 +24,7 @@ class LevelConfiguration {
             enemyShootInterval = 1.6  // Tiempo dentre disparos enemigos
             enemySpeed = 1.5 // velocidad de los enemigos
             enemyProjectileSpeed = 3.5 //Velocidad de proyectiles
-            gameModel.levelDuration = 60 // Tiempo que dura el nivel
+            gameModel.levelDuration = 10 // Tiempo que dura el nivel
             gameModel.playerShootCooldown = 0.4
             gameModel.isBossLevel = false
             
@@ -36,7 +36,7 @@ class LevelConfiguration {
             enemyShootInterval = 1.3  // Tiempo de disparo
             enemySpeed = 1.8
             enemyProjectileSpeed = 4.0
-            gameModel.levelDuration = 60
+            gameModel.levelDuration = 10
             gameModel.playerShootCooldown = 0.35
             gameModel.isBossLevel = false
             
@@ -49,7 +49,7 @@ class LevelConfiguration {
             enemyShootInterval = 1.0  // Tiempo de disparo
             enemySpeed = 2.0
             enemyProjectileSpeed = 4.5
-            gameModel.levelDuration = 60
+            gameModel.levelDuration = 10
             gameModel.playerShootCooldown = 0.3
             gameModel.isBossLevel = false
             

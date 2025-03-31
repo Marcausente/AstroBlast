@@ -176,7 +176,7 @@ class GameViewModel: ObservableObject {
     
     private func updateShipPosition() {
         if joystickDirection != 0 {
-            // Calculamos el nuevo desplazamiento basado en la dirección del joystick
+            // Calculamos el desplazamiento basado en la dirección del joystick
             let movement = joystickDirection * shipSpeed
             
             // Movemos la nave
@@ -270,9 +270,7 @@ class GameViewModel: ObservableObject {
     }
     
     private func updateEnemies(deltaTime: TimeInterval) {
-        // Procesamiento por lotes para mejor rendimiento
         
-        // Paso 1: Establecer objetivos si no existen
         for i in 0..<gameModel.enemies.count {
             if i < gameModel.enemies.count && gameModel.enemies[i].targetY == nil {
                 var enemy = gameModel.enemies[i]
@@ -281,7 +279,6 @@ class GameViewModel: ObservableObject {
             }
         }
         
-        // Paso 2: Crear un mapa de posiciones para consulta rápida
         var positionMap: [CGPoint: Bool] = [:]
         for enemy in gameModel.enemies {
             let gridX = Int(enemy.position.x / 60) // Tamaño de la cuadrícula
@@ -290,7 +287,6 @@ class GameViewModel: ObservableObject {
             positionMap[CGPoint(x: gridX, y: gridY)] = true
         }
         
-        // Paso 3: Actualizar movimiento de enemigos
         for i in 0..<gameModel.enemies.count {
             if i < gameModel.enemies.count {
                 var enemy = gameModel.enemies[i]
@@ -301,16 +297,13 @@ class GameViewModel: ObservableObject {
                     continue
                 }
                 
-                // Solo mover el enemigo si está en movimiento
                 if enemy.isMoving {
                     let gridX = Int(enemy.position.x / 60)
                     let gridY = Int(enemy.position.y / 60)
                     
-                    // Verificar obstáculos abajo (método simplificado)
                     let shouldStop = positionMap[CGPoint(x: gridX, y: gridY + 1)] == true
                     
                     if !shouldStop {
-                        // Mover el enemigo hacia abajo
                         enemy.position.y += enemySpeed
                         
                         // Verificar si ha llegado a la posición objetivo
@@ -327,7 +320,6 @@ class GameViewModel: ObservableObject {
                     let gridX = Int(enemy.position.x / 60)
                     let gridY = Int(enemy.position.y / 60)
                     
-                    // Verificar obstáculos abajo (método simplificado)
                     let canMove = positionMap[CGPoint(x: gridX, y: gridY + 1)] != true
                     
                     // Si puede moverse y no ha llegado a su objetivo, reanudar movimiento
@@ -546,7 +538,6 @@ class GameViewModel: ObservableObject {
     }
     
     private func checkCollisions() {
-        // Cache de las posiciones para evitar recálculos
         let playerPosition = CGPoint(x: gameModel.playerPosition, y: getShipYPosition())
         let playerSize = CGSize(width: shipWidth * 0.85, height: shipHeight * 0.85) // Hitbox de la nave
         let playerRect = CGRect(
@@ -558,7 +549,7 @@ class GameViewModel: ObservableObject {
         
         // Verificar colisiones entre proyectiles del jugador y enemigos
         for (projectileIndex, projectile) in gameModel.projectiles.enumerated().reversed() {
-            // Optimización: Si el proyectil está fuera del área de enemigos, saltar
+            // Si el proyectil está fuera del área de enemigos, saltar
             if projectile.position.y < 0 {
                 continue
             }
@@ -637,7 +628,6 @@ class GameViewModel: ObservableObject {
                         isEnemy: false
                     )
                     
-                    // Reproducir el sonido de explosión para la nave del jugador
                     AudioManager.shared.playSoundEffect(filename: "Sounds/Destroysound.mp3")
                     
                     gameModel.isGameOver = true
